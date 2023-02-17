@@ -1,8 +1,16 @@
 from snowball.archive import symbols
-
 from snowball.timeseries.wrap import TimeSeries
 
 
+class freq(object):
+
+    @property
+    def USSIR(self) -> TimeSeries:
+        if not hasattr(self, '__USSIR'):
+            self.__setattr__('__USSIR', TimeSeries('DFF'))
+        return self.__getattribute__('__USSIR')
+
+Archive = freq()
 
 
 

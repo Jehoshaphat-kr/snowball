@@ -32,3 +32,5 @@ import snowball as sb
 
 ty10y = sb.TimeSeries('DGS10')
 print(ty10y.ohlcv)
+
+print(sb.TimeSeries.USSIR)
