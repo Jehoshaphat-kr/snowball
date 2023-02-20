@@ -1,58 +1,50 @@
-from datetime import datetime, timedelta
-from pytz import timezone
-from snowball.archive import symbols
-from snowball.timeseries.fetch import (
-    krx,
-    krse,
-    ecos,
-    nyse,
-    fred
-)
+from snowball.timeseries.handle import _handle
+import plotly.graph_objects as go
 import pandas as pd
 
 
-class TimeSeries:
-    __p = 20
-    __d = datetime.now(timezone('Asia/Seoul')).date()
-    def __init__(self, ticker:str, label:str=None):
-        self.ticker = ticker
-        self.label = label
-        self.mode = symbols.locate(symbol=ticker)
-        return
+class _trace(_handle):
 
     @property
-    def enddate(self) -> str:
-        return self.__d.strftime("%Y%m%d")
-
-    @enddate.setter
-    def enddate(self, enddate:str):
-        self.__d = datetime.strptime(enddate, "%Y%m%d")
-
-    @property
-    def period(self) -> int or float:
-        return self.__p
-
-    @period.setter
-    def period(self, period:int or float):
-        self.__p = period
+    def candle(self) -> go.Candlestick:
+        if self.ohlcv.empty:
+            return go.Candlestick()
+        if not hasattr(self, '__candle'):
+            self.__setattr__('__candle', go.Candlestick(
+                name=self.name, x=self.ohlcv.index,
+                open=self.ohlcv.시가, high=self.ohlcv.고가, low=self.ohlcv.저가, close=self.ohlcv.종가,
+                visible=True, showlegend=True,
+                increasing_line=dict(color='red'), decreasing_line=dict(color='royalblue'),
+                xhoverformat="%Y/%m/%d", yhoverformat=self.dtype
+            ))
+        return self.__getattribute__('__candle')
 
     @property
-    def ohlcv(self) -> pd.DataFrame:
-        curr = self.__d
-        prev = curr - timedelta(self.period * 365)
+    def volume(self) -> go.Bar:
+        return go.Bar()
 
-        attr = f'__ohlcv{self.enddate}{self.period}'
-        if not hasattr(self, attr):
-            if self.mode == 'krx':
-                self.__setattr__(attr, krx(self.ticker, prev=prev, curr=curr))
-            elif self.mode == 'krse':
-                self.__setattr__(attr, krse(self.ticker, prev=prev, curr=curr))
-            elif self.mode == 'ecos':
-                if not self.label:
-                    raise KeyError("Label missing")
-                self.__setattr__(attr, ecos(self.ticker, self.label, prev=prev, curr=curr))
-            elif self.mode == 'nyse':
-                self.__setattr__(attr, nyse(self.ticker, self.period))
-            else:
-                self.__setattr__(attr, fred(self.ticker,prev=prev, curr=curr))
-        return self.__getattribute__(attr)
+    def _lining(self, sr:pd.Series):
+        if not hasattr(self, f'__line{sr.name}'):
+            self.__setattr__('__line', go.Scatter(
+                name=f"{self.name}", x=sr.index, y=sr,
+                visible=True, showlegend=True,
+                xhoverformat="%Y/%m/%d", yhoverformat=self.dtype,
+                hovertemplate='%{x}<br>%{y}' + f'{self.unit}<extra></extra>'
+            ))
+        return self.__getattribute__('__line')
+
+    @property
+    def line(self):
+        src = self.src if self.ohlcv.empty else self.ohlcv[col]
+        return self._lining(sr=src)
+
+
+if __name__ == "__main__":
+    obj = _trace(ticker='012330')
+
+    fig = go.Figure(
+        layout=dict(paper_bgcolor='white')
+    )
+    # fig.add_trace(obj.candle)
+    fig.add_trace(obj.line())
+    fig.show()

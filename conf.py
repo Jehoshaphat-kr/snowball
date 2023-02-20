@@ -30,7 +30,7 @@ import snowball as sb
 # tsla = sb.TimeSeries('AAPL')
 # print(tsla.ohlcv)
 
-ty10y = sb.TimeSeries('DGS10')
-print(ty10y.ohlcv)
+# ty10y = sb.TimeSeries('DGS10')
+# print(ty10y.ohlcv)
 
-print(sb.TimeSeries.USSIR)
+print(sb.KRSIR.src)

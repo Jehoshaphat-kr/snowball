@@ -1,7 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from pytz import timezone
 from pykrx.stock import (
     get_index_ohlcv_by_date,
-    get_market_ohlcv_by_date
+    get_market_ohlcv_by_date,
+    get_index_ticker_name
 )
 from pandas_datareader import get_data_fred
 from snowball.archive import symbols
@@ -70,3 +72,100 @@ def nyse(ticker:str, period:int) -> pd.DataFrame:
 def fred(symbol: str, prev:datetime, curr:datetime) -> pd.Series:
     fetch = get_data_fred(symbols=symbol, start=prev, end=curr)
     return pd.Series(name=symbol, dtype=float, index=fetch.index, data=fetch[symbol])
+
+
+class _fetch(object):
+    __p = 20
+    __d = datetime.now(timezone('Asia/Seoul')).date()
+    __u = None
+    __t = None
+    def __init__(self, ticker:str, label:str=None):
+        self.ticker = ticker
+        self.label = label
+        self.mode = symbols.locate(symbol=ticker)
+        return
+
+    @property
+    def name(self) -> str:
+        if not hasattr(self, '__name'):
+            if self.mode == 'krx':
+                self.__setattr__('__name', get_index_ticker_name(self.ticker))
+            elif self.mode == 'krse':
+                book = symbols.kr.set_index(keys='symbol').copy()
+                self.__setattr__('__name', book.loc[self.ticker, 'longName'])
+            elif self.mode == 'ecos':
+                self.__setattr__('__name', self.label)
+            else:
+                self.__setattr__('__name', self.ticker)
+        return self.__getattribute__('__name')
+
+    @property
+    def unit(self) -> str:
+        if not self.__u:
+            if self.mode == 'krx': self.__u = '-'
+            elif self.mode == 'krse': self.__u = 'KRW'
+            elif self.mode == 'ecos': self.__u = '%'
+            elif self.mode == 'us': self.__u = 'USD'
+            else: self.__u = '%'
+        return self.__u
+
+    @unit.setter
+    def unit(self, unit:str):
+        self.__u = unit
+
+    @property
+    def dtype(self) -> str:
+        if not self.__t:
+            if self.mode == 'krse': self.__t = ',d'
+            else: self.__t = ',.2f'
+        return self.__t
+
+    @dtype.setter
+    def dtype(self, dtype:str):
+        self.__t = dtype
+
+    @property
+    def enddate(self) -> str:
+        return self.__d.strftime("%Y%m%d")
+
+    @enddate.setter
+    def enddate(self, enddate:str):
+        self.__d = datetime.strptime(enddate, "%Y%m%d")
+
+    @property
+    def period(self) -> int or float:
+        return self.__p
+
+    @period.setter
+    def period(self, period:int or float):
+        self.__p = period
+
+    @property
+    def src(self) -> pd.DataFrame:
+        return self._fetch()
+
+    @property
+    def ohlcv(self) -> pd.DataFrame:
+        if isinstance(self.src, pd.Series):
+            return pd.DataFrame(columns=['시가', '고가', '저가', '종가', '거래량'])
+        return self.src
+
+    def _fetch(self) -> pd.DataFrame:
+        curr = self.__d
+        prev = curr - timedelta(self.period * 365)
+
+        attr = f'__ohlcv{self.enddate}{self.period}'
+        if not hasattr(self, attr):
+            if self.mode == 'krx':
+                self.__setattr__(attr, krx(self.ticker, prev=prev, curr=curr))
+            elif self.mode == 'krse':
+                self.__setattr__(attr, krse(self.ticker, prev=prev, curr=curr))
+            elif self.mode == 'ecos':
+                if not self.label:
+                    raise KeyError("Label missing")
+                self.__setattr__(attr, ecos(self.ticker, self.label, prev=prev, curr=curr))
+            elif self.mode == 'nyse':
+                self.__setattr__(attr, nyse(self.ticker, self.period))
+            else:
+                self.__setattr__(attr, fred(self.ticker,prev=prev, curr=curr))
+        return self.__getattribute__(attr)
