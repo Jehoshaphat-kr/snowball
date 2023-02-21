@@ -6,7 +6,7 @@ import pandas as pd
 class _trace(_handle):
 
     @property
-    def candle(self) -> go.Candlestick:
+    def OHLCV(self) -> go.Candlestick:
         if self.ohlcv.empty:
             return go.Candlestick()
         if not hasattr(self, '__candle'):
@@ -20,7 +20,7 @@ class _trace(_handle):
         return self.__getattribute__('__candle')
 
     @property
-    def volume(self) -> go.Bar:
+    def VOLUME(self) -> go.Bar:
         return go.Bar()
 
     def _lining(self, sr:pd.Series):
@@ -34,8 +34,8 @@ class _trace(_handle):
         return self.__getattribute__('__line')
 
     @property
-    def line(self):
-        src = self.src if self.ohlcv.empty else self.ohlcv[col]
+    def CLOSE(self):
+        src = self.src if self.ohlcv.empty else self.ohlcv.종가
         return self._lining(sr=src)
 
 
