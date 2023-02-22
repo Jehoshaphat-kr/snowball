@@ -16,6 +16,8 @@ from snowball.fundamental._fnguide import (
     getMultipleSeries
 )
 from snowball.timeseries import TimeSeries
+from snowball.fundamental._pykrx import getMarketCap
+from datetime import datetime, timedelta
 import pandas as pd
 
 
@@ -25,7 +27,7 @@ class fnguide(TimeSeries):
 
     def _set_(self, name:str, func, **kwargs):
         if not hasattr(self, name):
-            self.__setattr__(name, func(self.ticker, **kwargs))
+            self.__setattr__(name, func(ticker=self.ticker, **kwargs))
         return self.__getattribute__(name)
 
     @property
@@ -120,6 +122,11 @@ class fnguide(TimeSeries):
     def short_balance(self) -> pd.DataFrame:
         return self._set_('__short2', getShortBalance)
 
+    @property
+    def market_cap(self) -> pd.DataFrame:
+        fromdate = (datetime.strptime(self.enddate, "%Y%m%d") - timedelta(365 * 10)).strftime("%Y%m%d")
+        return self._set_('__cap', getMarketCap, fromdate=fromdate, todate=self.enddate, freq='y')
+
 
 if __name__ == '__main__':
     ticker = '316140'
@@ -135,8 +142,9 @@ if __name__ == '__main__':
     # print(tester.consensus)
     # print(tester.multiples)
     # print(tester.benchmark_multiple)
-    print(tester.multi_factor)
+    # print(tester.multi_factor)
     # print(tester.MultipleSeries)
     # print(tester.MultipleBand)
     # print(tester.ShortSell)
     # print(tester.ShortBalance)
+    print(tester.market_cap)

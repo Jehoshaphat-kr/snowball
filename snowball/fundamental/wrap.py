@@ -37,7 +37,7 @@ class _trace(fnguide):
             ) for n, c in enumerate(self.products_all.columns)
         ]
         layout = dict(
-            title=f"{self.name}({self.ticker}) Products",
+            title=f"<b>{self.name}({self.ticker})</b> Products",
             plot_bgcolor='white',
             barmode='stack',
             legend=dict(
@@ -81,7 +81,7 @@ class _trace(fnguide):
             ) for n, c in enumerate(self.products_recent.index)
         ]
         layout = dict(
-            title=f"{self.name}({self.ticker}) Products @{self.products_recent.name}",
+            title=f"<b>{self.name}({self.ticker})</b> Products @{self.products_recent.name}",
             plot_bgcolor='white',
             barmode='stack',
             legend=dict(
@@ -121,7 +121,7 @@ class _trace(fnguide):
             )
         ]
         layout = dict(
-            title=f"{self.name}({self.ticker}) Products @{self.products_recent.name}",
+            title=f"<b>{self.name}({self.ticker})</b> Products @{self.products_recent.name}",
             plot_bgcolor='white',
             legend=dict(
                 orientation="h",
@@ -147,7 +147,7 @@ class _trace(fnguide):
                 text=self.asset[f"{c}LB"],
                 texttemplate="%{text}<br>(%{meta}%)",
                 textposition="inside",
-                hoverinfo='skip'
+                hovertemplate=c[:2] + ': %{y}%<extra></extra>'
             ) for n, c in enumerate(['자본총계', '부채총계'])
         ]
         trace = go.Scatter(
@@ -162,9 +162,8 @@ class _trace(fnguide):
             texttemplate="총 자산: %{text}",
             hoverinfo='skip'
         )
-
         layout = dict(
-            title=f"{self.name}({self.ticker}) Asset",
+            title=f"<b>{self.name}({self.ticker})</b> Asset",
             plot_bgcolor='white',
             barmode='stack',
             legend=dict(
@@ -204,7 +203,7 @@ class _trace(fnguide):
             ) for n, c in enumerate(self.profit.columns) if not c.endswith('LB')
         ]
         layout = dict(
-            title=f"{self.name}({self.ticker}) Profit",
+            title=f"<b>{self.name}({self.ticker})</b> Profit",
             plot_bgcolor='white',
             barmode='group',
             legend=dict(
@@ -260,7 +259,7 @@ class _trace(fnguide):
         ]
         fig.add_traces(data=[trace] + traces, rows=[1, 1, 2, 2], cols=[1, 2, 1, 2])
         fig.update_layout(dict(
-            title=f"{self.name}({self.ticker}) Profit Rate and Expenses",
+            title=f"<b>{self.name}({self.ticker})</b> Profit Rate and Expenses",
             plot_bgcolor='white',
             barmode='stack',
             legend=dict(
@@ -322,7 +321,7 @@ class _trace(fnguide):
                     secondary_y=False if col == '종가' else True
                 )
         fig.update_layout(dict(
-            title=f"{self.name}({self.ticker}) Consensus and Foreign Rate",
+            title=f"<b>{self.name}({self.ticker})</b> Consensus and Foreign Rate",
             plot_bgcolor='white',
             margin=dict(r=0),
             legend=dict(
@@ -352,7 +351,7 @@ class _trace(fnguide):
             ) for n, col in enumerate(self.multi_factor.columns)
         ]
         layout = dict(
-            title=f"{self.name}({self.ticker}) Multi-Factors",
+            title=f"<b>{self.name}({self.ticker})</b> Multi-Factors",
             plot_bgcolor='white',
         )
         return go.Figure(data=traces, layout=layout)
