@@ -26,6 +26,7 @@ def getAllProducts(ticker: str) -> pd.DataFrame:
     header = pd.DataFrame(src['chart_H'])[['ID', 'NAME']].set_index(keys='ID').to_dict()['NAME']
     header.update({'PRODUCT_DATE': '기말'})
     products = pd.DataFrame(src['chart']).rename(columns=header).set_index(keys='기말')
+    products = products.drop(columns=[c for c in products.columns if products[c].astype(float).sum() == 0])
 
     i = products.columns[-1]
     products['Sum'] = products.astype(float).sum(axis=1)
