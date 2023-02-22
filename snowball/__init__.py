@@ -1,5 +1,6 @@
 from snowball.archive import symbols
 from snowball.timeseries import TimeSeries
+from snowball.fundamental import KrseStock
 
 
 
@@ -16,6 +17,8 @@ _mem = _memory()
 
 def __getattr__(name):
     attr = name.lower()
+    if attr in ['timeseries', 'krsestock']:
+        return
     if not _mem.loc(attr):
         if attr == 'krsir':
             _mem.set(attr, TimeSeries('722Y001', '한국은행 기준금리'))

@@ -13,7 +13,7 @@ class _symbols(object):
     _dir = os.path.dirname(__file__)
 
     def __init__(self):
-        print("Init Count: symbols")
+        pass
 
     @property
     def kr(self) -> pd.DataFrame:
