@@ -1,1 +1,1 @@
-from snowball.fundamental.wrap import _trace as KrseStock
+from snowball.fundamental.api import KrseStock

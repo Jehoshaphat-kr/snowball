@@ -3,7 +3,7 @@ from pykrx.stock import (
     get_index_ticker_name
 )
 from stocksymbol import StockSymbol
-from snowball._xml import xml2df
+from snowball.define import xml2df
 import pandas as pd
 import os
 

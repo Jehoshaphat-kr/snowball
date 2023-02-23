@@ -7,7 +7,7 @@ from pykrx.stock import (
 )
 from pandas_datareader import get_data_fred
 from snowball.archive import symbols
-from snowball._xml import xml2df
+from snowball.define import xml2df
 import pandas as pd
 import yfinance as yf
 
