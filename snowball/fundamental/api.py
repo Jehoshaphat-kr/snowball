@@ -1,8 +1,3 @@
-
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import pandas as pd
-
 from snowball.timeseries import TimeSeries
 from snowball.fundamental.wrap import (
     _summary,
@@ -10,7 +5,8 @@ from snowball.fundamental.wrap import (
     _asset,
     _product,
     _profit,
-    _marketcap
+    _marketcap,
+    _expenses
 )
 
 class KrseStock(TimeSeries):
@@ -26,62 +22,15 @@ class KrseStock(TimeSeries):
 
         self.profit = _profit(self.ticker, self.name, self.statement)
 
-        self.product = _product(self.ticker, self.name)
+        self.products = _product(self.ticker, self.name)
 
         self.marketcap = _marketcap(self.ticker, self.name, self.enddate)
+
+        self.expenses = _expenses(self.ticker, self.name, self.statement)
 
 
 
 # class _trace(fnguide):
-#
-#     @property
-#     def EXPENSE(self) -> go.Figure:
-#         fig = make_subplots(
-#             rows=2, cols=2,
-#             subplot_titles=["Profit Rate", "Sales Cost Rate", "Sales and Management Cost Rate", "R&D Investment Rate"],
-#             x_title="기말",
-#             y_title="[%]",
-#         )
-#         trace = go.Scatter(
-#             name='영업이익률',
-#             x=self.statement.index,
-#             y=self.statement['영업이익률'].astype(float),
-#             showlegend=True,
-#             visible=True,
-#             mode='lines+markers+text',
-#             textposition="top center",
-#             texttemplate="%{y:.2f}%",
-#             hoverinfo='skip'
-#         )
-#         traces = [
-#             go.Scatter(
-#                 name=c,
-#                 x=self.expenses.index,
-#                 y=self.expenses[c].astype(float),
-#                 showlegend=True,
-#                 visible=True,
-#                 mode='lines+markers+text',
-#                 textposition="top center",
-#                 texttemplate="%{y:.2f}%",
-#                 hoverinfo='skip'
-#             ) for n, c in enumerate(("매출원가율", "판관비율", "R&D투자비중"))
-#         ]
-#         fig.add_traces(data=[trace] + traces, rows=[1, 1, 2, 2], cols=[1, 2, 1, 2])
-#         fig.update_layout(dict(
-#             title=f"<b>{self.name}({self.ticker})</b> Profit Rate and Expenses",
-#             plot_bgcolor='white',
-#             barmode='stack',
-#             legend=dict(
-#                 orientation="h",
-#                 xanchor="right",
-#                 yanchor="bottom",
-#                 x=1,
-#                 y=1.04
-#             ),
-#         ))
-#         fig.update_yaxes(dict(showgrid=True, gridcolor='lightgrey'))
-#         return fig
-#
 #     @property
 #     def SUPPLY(self) -> go.Figure:
 #         fig = make_subplots(
@@ -173,10 +122,10 @@ if __name__ == "__main__":
     # t = '012330'
     t = '017670'
     stock = KrseStock(ticker=t)
-    stock.summary('show')
-    stock.asset('show')
-    stock.profit('show')
-    stock.product('show', 'bars')
-    stock.product('show', 'bar')
-    stock.product('show', 'pie')
-    stock.marketcap('show')
+    # stock.summary('show')
+    # stock.asset('show')
+    # stock.profit('show')
+    # stock.products('show', 'bars')
+    # stock.products('show', 'pie')
+    # stock.marketcap('show')
+    stock.expenses('show')

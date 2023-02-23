@@ -1,3 +1,4 @@
+from plotly.subplots import make_subplots
 from snowball.define import colors
 from snowball.fundamental.fetch import (
     get_summary,
@@ -36,6 +37,7 @@ class _summary(object):
         _call_validator(call)
         if call == 'show':
             print(self.text)
+            return
         return self.text
     @property
     def text(self) -> str:
@@ -52,6 +54,7 @@ class _state(object):
         _call_validator(call)
         if call == 'show':
             print(self.df)
+            return
         return self.df
     @property
     def by(self) -> str:
@@ -78,7 +81,7 @@ class _asset(object):
             else:
                 fig.show()
                 return
-        elif call in ['trace']:
+        elif call.startswith('trace'):
             return self.traces
         else:
             return self.df
@@ -103,7 +106,7 @@ class _asset(object):
                 textposition="inside" if n else "top center",
                 hoverinfo="all" if n else "skip",
                 hovertemplate=c[:2] + ': %{y}%<extra></extra>' if n else None
-            ) for n, c in enumerate(['자산총계', '자본총계', '부채총계'])
+            ) for n, c in enumerate(['자산총계', '부채총계', '자본총계'])
         ]
         traces[0].mode='text'
         return traces
@@ -144,7 +147,7 @@ class _profit(object):
             else:
                 fig.show()
                 return
-        elif call in ['trace']:
+        elif call.startswith('trace'):
             return self.traces
         else:
             return self.df
@@ -208,7 +211,7 @@ class _marketcap(object):
             else:
                 fig.show()
                 return
-        elif call in ['trace']:
+        elif call.startswith('trace'):
             return self.traces
         else:
             return self.df
@@ -221,7 +224,7 @@ class _marketcap(object):
     def traces(self) -> list:
         return [
             go.Bar(
-                name='Market-Cap',
+                name='시가총액',
                 x=self.df.index,
                 y=self.df.시가총액,
                 showlegend=True,
@@ -265,10 +268,6 @@ class _product(object):
         if mode == 'bars':
             layout = self.layout
             data = self.traces
-        elif mode == 'bar':
-            layout = self.layout
-            layout.xaxis = None
-            data = self.trace
         elif mode == 'pie':
             layout = self.layout
             layout.xaxis = None
@@ -284,7 +283,7 @@ class _product(object):
             else:
                 fig.show()
                 return
-        elif call in ['trace']:
+        elif call.startswith('trace'):
             return data
         else:
             return self.df
@@ -309,24 +308,6 @@ class _product(object):
                 texttemplate=c + "<br>%{y:.2f}%",
                 hovertemplate=c + "<br>%{y:.2f}%<extra></extra>"
             ) for n, c in enumerate(self.df.columns)
-        ]
-    @property
-    def trace(self) -> list:
-        df = get_products_recent(self._t, self.df)
-        return [
-            go.Bar(
-                name=c,
-                x=[self._n],
-                y=[df[c]],
-                showlegend=True,
-                visible=True,
-                marker=dict(color=colors[n]),
-                opacity=0.9,
-                text=c,
-                textposition="inside",
-                texttemplate="%{text}<br>%{y:.2f}%",
-                hovertemplate=c + "<br>%{y:.2f}%<extra></extra>"
-            ) for n, c in enumerate(df.index)
         ]
     @property
     def pie(self) -> list:
@@ -373,21 +354,28 @@ class _product(object):
 
 
 class _expenses(object):
-    def __init__(self, ticker:str, name:str):
-        self._t, self._n = ticker, name
-    # def __call__(self, call: str = 'figure'):
-    #     _call_validator(call)
-    #     if call in ['figure', 'show']:
-    #         fig = go.Figure(data=self.traces, layout=self.layout)
-    #         if call == 'figure':
-    #             return fig
-    #         else:
-    #             fig.show()
-    #             return
-    #     elif call in ['trace']:
-    #         return self.traces
-    #     else:
-    #         return self.df
+    def __init__(self, ticker:str, name:str, stat:_state):
+        self._t, self._n, self._s = ticker, name, stat
+    def __call__(self, call: str = 'figure'):
+        _call_validator(call)
+        if call in ['figure', 'show']:
+            fig = make_subplots(
+                rows=2, cols=2,
+                subplot_titles=["Profit Rate", "Sales Cost Rate", "Sales and Management Cost Rate", "R&D Investment Rate"],
+                x_title="기말",
+                y_title="[%]",
+            ).add_traces(data=self.traces, rows=[1, 1, 2, 2], cols=[1, 2, 1, 2])
+            fig.update_layout(self.layout)
+            fig.update_yaxes(dict(showgrid=True, gridcolor='lightgrey'))
+            if call == 'figure':
+                return fig
+            else:
+                fig.show()
+                return
+        elif call.startswith('trace'):
+            return self.traces
+        else:
+            return self.df
     @property
     def df(self) -> pd.DataFrame:
         if not hasattr(self, '__df'):
@@ -395,4 +383,29 @@ class _expenses(object):
         return self.__getattribute__('__df')
     @property
     def traces(self) -> list:
-        return list()
+        return [
+            go.Scatter(
+                name=c,
+                x=(self.df if n else self._s.df).index,
+                y=(self.df[c].dropna() if n else self._s.df[c]).astype(float),
+                showlegend=True,
+                visible=True,
+                mode='lines+markers+text',
+                textposition="top center",
+                texttemplate="%{y:.2f}%",
+                hovertemplate='%{x}: %{y:.2f}%<extra></extra>'
+            ) for n, c in enumerate(("영업이익률", "매출원가율", "판관비율", "R&D투자비중"))
+        ]
+    @property
+    def layout(self) -> dict:
+        return dict(
+            title=f"<b>{self._n}({self._t})</b> Profit Rate and Expenses",
+            plot_bgcolor='white',
+            legend=dict(
+                orientation="h",
+                xanchor="right",
+                yanchor="bottom",
+                x=1,
+                y=1.04
+            ),
+        )

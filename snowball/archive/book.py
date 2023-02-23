@@ -41,9 +41,14 @@ class _symbols(object):
                 ], axis=0
             )
             local.set_index(keys='종목코드', inplace=True)
+            missing = local[
+                local.index.isin(list(set(local.index) - set(kr.index)))
+            ][['종목명', '섹터']].rename(columns={'종목명':'longName', '섹터':'sector'})
+
             kr = kr.join(local[['종목명', '섹터']].rename(columns={'종목명':'name', '섹터':'sector'}), how='left')
+            kr = pd.concat(objs=[kr, missing], axis=0)
             kr.index.name = 'symbol'
-            self.__setattr__('__kr', kr.reset_index(level=0))
+            self.__setattr__('__kr', kr)
         return self.__getattribute__('__kr')
 
     @property
@@ -59,7 +64,8 @@ class _symbols(object):
         8779   RRIF             Rainforest Resources Inc.      OTC  us_market    EQUITY
         """
         if not hasattr(self, '__us'):
-            self.__setattr__('__us', pd.DataFrame(self._engine_s.get_symbol_list(market='us')))
+            df = pd.DataFrame(self._engine_s.get_symbol_list(market='us'))
+            self.__setattr__('__us', df.set_index(keys='symbol'))
         return self.__getattribute__('__us')
 
     @property
@@ -143,3 +149,5 @@ if __name__ == "__main__":
     # print(symbols.kr)
     # print(symbols.us)
     # print(symbols.ecos)
+
+    df = symbols.kr.copy()

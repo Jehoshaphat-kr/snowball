@@ -91,8 +91,7 @@ class _fetch(object):
             if self.mode == 'krx':
                 self.__setattr__('__name', get_index_ticker_name(self.ticker))
             elif self.mode == 'krse':
-                book = symbols.kr.set_index(keys='symbol').copy()
-                self.__setattr__('__name', book.loc[self.ticker, 'longName'])
+                self.__setattr__('__name', symbols.kr.loc[self.ticker, 'longName'])
             elif self.mode == 'ecos':
                 self.__setattr__('__name', self.label)
             else:

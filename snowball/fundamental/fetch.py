@@ -58,13 +58,15 @@ def get_market_cap(ticker:str, todate:str) -> pd.Series:
     df = stock.get_market_cap_by_date(fromdate=fromdate, todate=todate, freq='y', ticker=ticker)
     df['시가총액'] = round(df['시가총액'] / 100000000, 1).astype(int)
     df['시가총액LB'] = df.시가총액.apply(int2won)
-    df = df.drop(index=[df.index[-1]])
+    # df = df.drop(index=[df.index[-1]])
     df.index = df.index.strftime("%Y/%m")
+    df['reindex'] = df.index[:-1].tolist() + [f"{df.index[-1][:4]}/현재"]
+    df = df.set_index(keys='reindex')
     return df[['시가총액', '시가총액LB']]
 
 def get_products(ticker: str) -> pd.DataFrame:
     url = f"http://cdn.fnguide.com/SVO2//json/chart/02/chart_A{ticker}_01_N.json"
-    src = json.loads(urlopen(url=url).read().decode('utf-8-sig', 'replace'))
+    src = json.loads(urlopen(url=url).read().decode('utf-8-sig', 'replace'), strict=False)
     header = pd.DataFrame(src['chart_H'])[['ID', 'NAME']].set_index(keys='ID').to_dict()['NAME']
     header.update({'PRODUCT_DATE': '기말'})
     products = pd.DataFrame(src['chart']).rename(columns=header).set_index(keys='기말')
@@ -225,3 +227,10 @@ def get_multiple_series(ticker:str) -> pd.DataFrame:
     todate = datetime.today().strftime("%Y%m%d")
     fromdate = (datetime.today() - timedelta(3 * 365)).strftime("%Y%m%d")
     return stock.get_market_fundamental(fromdate, todate, ticker)
+
+
+if __name__ == "__main__":
+    t = "383310"
+    # t = "005930"
+    df = get_products(ticker=t)
+    print(df)
