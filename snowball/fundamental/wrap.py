@@ -409,3 +409,68 @@ class _expenses(object):
                 y=1.04
             ),
         )
+
+
+class _consensus(object):
+    def __init__(self, ticker:str, name:str):
+        self._t, self._n = ticker, name
+
+    def __call__(self, call: str = 'figure'):
+        _call_validator(call)
+        if call in ['figure', 'show']:
+            fig = go.Figure(data=self.traces, layout=self.layout)
+            if call == 'figure':
+                return fig
+            else:
+                fig.show()
+                return
+        elif call.startswith('trace'):
+            return self.traces
+        else:
+            return self.df
+    @property
+    def df(self) -> pd.DataFrame:
+        if not hasattr(self, '__df'):
+            self.__setattr__('__df', get_consensus(self._t))
+        return self.__getattribute__('__df')
+    @property
+    def traces(self) -> list:
+        return [
+            go.Scatter(
+                name=c,
+                x=self.df.index,
+                y=self.df[c],
+                showlegend=True,
+                visible=True,
+                mode='lines',
+                line=dict(color=colors[n] if n else 'black', dash=None if n else 'dot'),
+                xhoverformat='%Y/%m/%d',
+                yhoverformat=',d',
+                hovertemplate="%{y}원<extra></extra>"
+            ) for n, c in enumerate(("목표주가", "종가"))
+        ]
+    @property
+    def layout(self) -> go.Layout:
+        return go.Layout(
+            title=f"<b>{self._n}({self._t})</b> Consensus",
+            plot_bgcolor='white',
+            legend=dict(
+                orientation="h",
+                xanchor="right",
+                yanchor="bottom",
+                x=1,
+                y=1.04
+            ),
+            hovermode="x unified",
+            xaxis=dict(
+                title='날짜',
+                showticklabels=True,
+                showgrid=True,
+                gridcolor='lightgrey',
+            ),
+            yaxis=dict(
+                title='[원]',
+                showgrid=True,
+                gridcolor='lightgrey',
+            )
+        )

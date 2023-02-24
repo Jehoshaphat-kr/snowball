@@ -6,7 +6,8 @@ from snowball.fundamental.wrap import (
     _product,
     _profit,
     _marketcap,
-    _expenses
+    _expenses,
+    _consensus
 )
 
 class KrseStock(TimeSeries):
@@ -27,6 +28,8 @@ class KrseStock(TimeSeries):
         self.marketcap = _marketcap(self.ticker, self.name, self.enddate)
 
         self.expenses = _expenses(self.ticker, self.name, self.statement)
+
+        self.consensus = _consensus(self.ticker, self.name)
 
 
 
@@ -128,4 +131,5 @@ if __name__ == "__main__":
     # stock.products('show', 'bars')
     # stock.products('show', 'pie')
     # stock.marketcap('show')
-    stock.expenses('show')
+    # stock.expenses('show')
+    stock.consensus('show')

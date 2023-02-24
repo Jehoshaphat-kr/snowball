@@ -230,7 +230,8 @@ def get_multiple_series(ticker:str) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    t = "383310"
-    # t = "005930"
-    df = get_products(ticker=t)
+    # t = "383310"
+    t = "005930"
+    # df = get_products(ticker=t)
+    df = get_consensus(ticker=t)
     print(df)
