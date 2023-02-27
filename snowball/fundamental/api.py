@@ -7,8 +7,10 @@ from snowball.fundamental.wrap import (
     _profit,
     _marketcap,
     _expenses,
-    _consensus
+    _consensus,
+    _foreigner
 )
+
 
 class KrseStock(TimeSeries):
 
@@ -31,73 +33,11 @@ class KrseStock(TimeSeries):
 
         self.consensus = _consensus(self.ticker, self.name)
 
+        self.foreigner = _foreigner(self.ticker, self.name)
+
 
 
 # class _trace(fnguide):
-#     @property
-#     def SUPPLY(self) -> go.Figure:
-#         fig = make_subplots(
-#             rows=2, cols=2,
-#             subplot_titles=["Consensus", "Foreigner: 3Y", "Foreigner: 1Y", "Foreigner: 3M"],
-#             horizontal_spacing=0.08, vertical_spacing=0.08,
-#             specs=[
-#                 [{}, {'secondary_y':True}],
-#                 [{'secondary_y':True}, {'secondary_y':True}]
-#             ],
-#             x_title="날짜", y_title='종가[원]'
-#         )
-#         for n, c in enumerate(self.consensus):
-#             if c == '투자의견': continue
-#             fig.add_trace(
-#                 go.Scatter(
-#                     name=c,
-#                     x=self.consensus.index,
-#                     y=self.consensus[c],
-#                     showlegend=False if c.endswith('종가') else True,
-#                     legendgroup=c,
-#                     mode='lines',
-#                     line=dict(dash='dot' if c == '종가' else None, color='black' if c == '종가' else self._c[0]),
-#                     xhoverformat="%Y/%m/%d",
-#                     yhoverformat=",d",
-#                     hovertemplate="%{x}<br>" + c + ": %{y}원<extra></extra>"
-#                 ), row=1, col=1
-#             )
-#         for n, c in enumerate(('3Y', '1Y', '3M')):
-#             df = self.foreigner[c].dropna()
-#             for col in df.columns[::-1]:
-#                 trace = go.Scatter(
-#                     name=col,
-#                     x=df.index,
-#                     y=df[col],
-#                     showlegend=True if not n else False,
-#                     legendgroup=col,
-#                     mode='lines',
-#                     line=dict(dash='dot' if col == '종가' else None, color='black' if col == '종가' else self._c[1]),
-#                     xhoverformat='%Y/%m/%d',
-#                     yhoverformat=",d" if col == '종가' else ".2f",
-#                     hovertemplate="%{x}<br>" + col + ": %{y}" + ("원" if col == '종가' else '%') + "<extra></extra>"
-#                 )
-#                 fig.add_trace(
-#                     trace, row={0:1, 1:2, 2:2}[n], col={0:2, 1:1, 2:2}[n],
-#                     secondary_y=False if col == '종가' else True
-#                 )
-#         fig.update_layout(dict(
-#             title=f"<b>{self.name}({self.ticker})</b> Consensus and Foreign Rate",
-#             plot_bgcolor='white',
-#             margin=dict(r=0),
-#             legend=dict(
-#                 orientation="h",
-#                 xanchor="right",
-#                 yanchor="bottom",
-#                 x=1,
-#                 y=1.04
-#             ),
-#         ))
-#         fig.update_xaxes(dict(showticklabels=True, tickformat="%Y/%m/%d", showgrid=True, gridcolor="lightgrey"))
-#         fig.update_yaxes(dict(showgrid=True, gridcolor='lightgrey'), secondary_y=False)
-#         fig.update_yaxes(dict(title='[%]'), secondary_y=True)
-#         return fig
-#
 #     @property
 #     def MULTIFACTOR(self) -> go.Figure:
 #         traces = [
@@ -132,4 +72,5 @@ if __name__ == "__main__":
     # stock.products('show', 'pie')
     # stock.marketcap('show')
     # stock.expenses('show')
-    stock.consensus('show')
+    # stock.consensus('show')
+    stock.foreigner('show')

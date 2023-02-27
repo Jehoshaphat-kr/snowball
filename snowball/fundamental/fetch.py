@@ -159,7 +159,7 @@ def get_multi_factor(ticker:str) -> pd.DataFrame:
 
 def get_benchmark_return(ticker:str):
     objs = dict()
-    for period in ['3M', '1Y']:
+    for period in ['3M', '1Y', '3Y']:
         url = f"http://cdn.fnguide.com/SVO2/json/chart/01_01/chart_A{ticker}_{period}.json"
         data = json.loads(urlopen(url=url).read().decode('utf-8-sig', 'replace'))
         header = pd.DataFrame(data["CHART_H"])[['ID', 'PREF_NAME']]
@@ -233,5 +233,8 @@ if __name__ == "__main__":
     # t = "383310"
     t = "005930"
     # df = get_products(ticker=t)
-    df = get_consensus(ticker=t)
+    # df = get_consensus(ticker=t)
+    # df = get_foreign_rate(ticker=t)
+    # df = get_nps(ticker=t)
+    df = get_benchmark_return(ticker=t)
     print(df)

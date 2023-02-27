@@ -474,3 +474,114 @@ class _consensus(object):
                 gridcolor='lightgrey',
             )
         )
+
+class _foreigner(object):
+    def __init__(self, ticker:str, name:str):
+        self._t, self._n, self._m = ticker, name, 'plot'
+    def __call__(self, call: str = 'figure', mode: str='plot'):
+        _call_validator(call)
+        self._m = mode
+        if call in ['figure', 'show']:
+            fig = make_subplots(
+                rows=1 if mode == 'plot' else 3, cols=1,
+                x_title='날짜',
+                subplot_titles=None if mode == 'plot' else ['3M', '1Y', '3Y'],
+                vertical_spacing=None if mode == 'plot' else 0.08,
+                specs=[
+                    [{'secondary_y': True}]
+                ] if mode == 'plot' else [
+                    [{"secondary_y": True}],
+                    [{"secondary_y": True}],
+                    [{"secondary_y": True}]
+                ]
+            )
+            fig.add_traces(
+                data=self.traces,
+                rows=[1, 1, 1, 1, 1, 1] if mode == 'plot' else [1, 1, 2, 2, 3, 3],
+                cols=[1, 1, 1, 1, 1, 1],
+                secondary_ys=[False, True, False, True, False, True]
+            )
+            fig.update_layout(self.layout)
+            return fig if call == 'figure' else fig.show()
+        elif call.startswith('trace'):
+            return self.traces
+        else:
+            return self.df
+    @property
+    def df(self) -> pd.DataFrame:
+        if not hasattr(self, '__df'):
+            self.__setattr__('__df', get_foreign_rate(self._t))
+        return self.__getattribute__('__df')
+    @property
+    def traces(self):
+        return [
+            go.Scatter(
+                name=t if self._m == 'plot' else c,
+                x=self.df[t][c].dropna().index,
+                y=self.df[t][c].dropna(),
+                showlegend=True if (self._m == 'plot' and '종가' in c) or (not self._m == 'plot' and t == '3M') else False,
+                legendgroup=t if self._m == 'plot' else c,
+                visible=True if (not self._m == 'plot') or (self._m == 'plot' and t == '3M') else 'legendonly',
+                mode='lines',
+                line=dict(color='black' if '종가' in c else colors[0], dash='dot' if '종가' in c else None),
+                xhoverformat="%Y/%m/%d",
+                yhoverformat=',d' if '종가' in c else '.2f',
+                hovertemplate='%{y}' + ('원' if '종가' in c else '%') + '<extra></extra>'
+            ) for t, c in self.df.columns
+        ]
+    @property
+    def layout(self):
+        return dict(
+            title=f"<b>{self._n}({self._t})</b> Foreign Rate",
+            plot_bgcolor='white',
+            legend=dict(
+                orientation="h",
+                xanchor="right",
+                yanchor="bottom",
+                x=1,
+                y=1.04
+            ),
+            hovermode="x unified",
+            xaxis=dict(
+                tickformat="%Y/%m/%d",
+                showticklabels=True,
+                showgrid=True,
+                gridcolor='lightgrey',
+            ),
+            xaxis2=dict(
+                tickformat="%Y/%m/%d",
+                showticklabels=True,
+                showgrid=True,
+                gridcolor='lightgrey',
+            ),
+            xaxis3=dict(
+                tickformat="%Y/%m/%d",
+                showticklabels=True,
+                showgrid=True,
+                gridcolor='lightgrey',
+            ),
+            yaxis=dict(
+                title='[원]',
+                showgrid=True,
+                gridcolor='lightgrey',
+            ),
+            yaxis2=dict(
+                title='[%]'
+            ),
+            yaxis3=dict(
+                title='[원]',
+                showgrid=True,
+                gridcolor='lightgrey',
+            ),
+            yaxis4=dict(
+                title='[%]'
+            ),
+            yaxis5=dict(
+                title='[원]',
+                showgrid=True,
+                gridcolor='lightgrey',
+            ),
+            yaxis6=dict(
+                title='[%]'
+            )
+        )
