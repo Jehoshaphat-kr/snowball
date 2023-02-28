@@ -1,5 +1,5 @@
 from snowball.timeseries import TimeSeries
-from snowball.fundamental.wrap import (
+from snowball.fundamental.deco import (
     _summary,
     _state,
     _asset,
@@ -8,7 +8,8 @@ from snowball.fundamental.wrap import (
     _marketcap,
     _expenses,
     _consensus,
-    _foreigner
+    _foreigner,
+    _multiple
 )
 
 
@@ -34,6 +35,8 @@ class KrseStock(TimeSeries):
         self.consensus = _consensus(self.ticker, self.name)
 
         self.foreigner = _foreigner(self.ticker, self.name)
+
+        self.multiples = _multiple(self.ticker, self.name)
 
 
 
@@ -73,4 +76,6 @@ if __name__ == "__main__":
     # stock.marketcap('show')
     # stock.expenses('show')
     # stock.consensus('show')
-    stock.foreigner('show')
+    # stock.foreigner('show')
+
+    print(stock.multiples.df)

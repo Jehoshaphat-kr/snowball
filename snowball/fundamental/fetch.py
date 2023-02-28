@@ -225,7 +225,7 @@ def get_multiple_band(ticker:str) -> (pd.DataFrame, pd.DataFrame):
 
 def get_multiple_series(ticker:str) -> pd.DataFrame:
     todate = datetime.today().strftime("%Y%m%d")
-    fromdate = (datetime.today() - timedelta(3 * 365)).strftime("%Y%m%d")
+    fromdate = (datetime.today() - timedelta(5 * 365)).strftime("%Y%m%d")
     return stock.get_market_fundamental(fromdate, todate, ticker)
 
 
@@ -236,5 +236,10 @@ if __name__ == "__main__":
     # df = get_consensus(ticker=t)
     # df = get_foreign_rate(ticker=t)
     # df = get_nps(ticker=t)
-    df = get_benchmark_return(ticker=t)
+    # df = get_benchmark_return(ticker=t)
+    df = get_multiple_series(ticker=t)
     print(df)
+
+    df1, df2 = get_multiple_band(ticker=t)
+    print(df1)
+    print(df2)

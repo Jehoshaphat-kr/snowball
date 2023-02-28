@@ -585,3 +585,32 @@ class _foreigner(object):
                 title='[%]'
             )
         )
+
+class _multiple(object):
+    label = [
+        "per", "pbr", "div", "bps", "eps", "dps",
+        "adj_close",
+        "per_low", "per_midlow", "per_mid", "per_midhigh", "per_high",
+        "pbr_low", "pbr_midlow", "pbr_mid", "pbr_midhigh", "pbr_high"
+    ]
+    def __init__(self, ticker:str, name:str):
+        self._t, self._n = ticker, name
+    def __call__(self):
+        return
+    @property
+    def df(self) -> pd.DataFrame:
+        if not hasattr(self, '__df'):
+            per_bnd, pbr_bnd = get_multiple_band(self._t)
+            self.__setattr__('__df', (get_multiple_series(self._t), per_bnd, pbr_bnd))
+        return self.__getattribute__('__df')
+    def traces(self, select:str='all'):
+        df1, df2, df3 = self.df
+        traces = [
+            go.Scatter(
+                name=c,
+                x=df1.index,
+                y=df1[c],
+                showlegend=True,
+                legendgroup=c
+            ) for c in df1.columns
+        ]
