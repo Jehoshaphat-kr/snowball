@@ -12,9 +12,6 @@ class _symbols(object):
     _engine_s = StockSymbol("95012214-44b0-4664-813f-a7ef5ad3b0b4")
     _dir = os.path.dirname(__file__)
 
-    def __init__(self):
-        pass
-
     @property
     def kr(self) -> pd.DataFrame:
         """

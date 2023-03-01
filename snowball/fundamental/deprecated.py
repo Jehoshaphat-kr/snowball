@@ -1,6 +1,6 @@
 from plotly.subplots import make_subplots
 from snowball.define import colors
-from snowball.fundamental.fetch import (
+from snowball.fundamental.fnguide._fetch import (
     get_summary,
     get_statement,
     get_asset,
@@ -11,14 +11,8 @@ from snowball.fundamental.fetch import (
     get_expenses,
     get_consensus,
     get_foreign_rate,
-    get_nps,
     get_multiple_series,
-    get_multiple_band,
-    get_multi_factor,
-    get_benchmark_return,
-    get_benchmark_multiple,
-    get_short_sell,
-    get_short_balance
+    get_multiple_band
 )
 import plotly.graph_objects as go
 import pandas as pd

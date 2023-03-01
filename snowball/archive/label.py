@@ -2,7 +2,7 @@ from snowball.archive.book import symbols
 from pykrx.stock import get_index_ticker_name
 
 
-class label(symbols):
+class label(object):
     """
     Set basic property or attribute of single asset ticker.
     Asset is classified by market:
@@ -18,7 +18,7 @@ class label(symbols):
     def __init__(self, ticker:str, label:str=str()):
         self.ticker = ticker
         self.label = label
-        self.market = self.locate(symbol=ticker)
+        self.market = symbols.locate(symbol=ticker)
 
     def __call__(self, *args, **kwargs):
         return

@@ -1,5 +1,5 @@
 from snowball.timeseries import TimeSeries
-from snowball.fundamental.deco import (
+from snowball.fundamental.deprecated import (
     _summary,
     _state,
     _asset,
