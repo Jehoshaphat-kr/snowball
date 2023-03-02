@@ -1,42 +1,76 @@
 from snowball.timeseries import TimeSeries
-from snowball.fundamental.deprecated import (
+from snowball.fundamental._view import (
     _summary,
-    _state,
-    _asset,
-    _product,
-    _profit,
+    _statement,
     _marketcap,
-    _expenses,
-    _consensus,
-    _foreigner,
-    _multiple
+    # _product,
+    # _expenses,
+    # _consensus,
+    # _foreigner,
+    # _multiple
 )
+import os
 
 
 class KrseStock(TimeSeries):
 
     def __init__(self, ticker:str):
         super().__init__(ticker=ticker)
+        self.__p = os.path.join(os.path.join(os.environ['USERPROFILE']), rf'Desktop/snob/{self.ticker} {self.name}')
+        if not os.path.isdir(self.__p):
+            os.makedirs(self.__p)
 
-        self.summary = _summary(self.ticker)
+        '''
+        Abstract
+        1) Attributes
+          - text: source text
+        2) Method
+          - N/A
+        3) Call
+          - print(text)
+        '''
+        self.summary = _summary(self)
 
-        self.statement = _state(self.ticker)
+        '''
+        Statement
+        1) Attributes
+          - by: 'annual' or 'quarter'
+        '''
+        self.statement = _statement(self)
 
-        self.asset = _asset(self.ticker, self.name, self.statement)
+        '''
+        Market-Cap
+        1) Attributes
+          - df: source dataframe
+        2) Method
+          - 
+        '''
+        self.marketcap = _marketcap(self)
+        #
+        # self.products = _product(self.ticker, self.name)
+        #
+        # self.marketcap = _marketcap(self.ticker, self.name, self.enddate)
+        #
+        # self.expenses = _expenses(self.ticker, self.name, self.statement)
+        #
+        # self.consensus = _consensus(self.ticker, self.name)
+        #
+        # self.foreigner = _foreigner(self.ticker, self.name)
+        #
+        # self.multiples = _multiple(self.ticker, self.name)
+        return
 
-        self.profit = _profit(self.ticker, self.name, self.statement)
+    @property
+    def path(self) -> str:
+        return self.__p
 
-        self.products = _product(self.ticker, self.name)
+    @path.setter
+    def path(self, path:str):
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        self.__p = path
 
-        self.marketcap = _marketcap(self.ticker, self.name, self.enddate)
 
-        self.expenses = _expenses(self.ticker, self.name, self.statement)
-
-        self.consensus = _consensus(self.ticker, self.name)
-
-        self.foreigner = _foreigner(self.ticker, self.name)
-
-        self.multiples = _multiple(self.ticker, self.name)
 
 
 
@@ -65,17 +99,24 @@ if __name__ == "__main__":
     # tester.SUPPLY.show()
     # tester.MULTIFACTOR.show()
 
-    # t = '012330'
-    t = '017670'
+    t = '012330'
+    # t = '017670'
     stock = KrseStock(ticker=t)
+    stock.path = rf'\\kefico\keti\ENT\Softroom\Temp\J.H.Lee\snob\{stock.ticker} {stock.name}'
+
     # stock.summary('show')
-    # stock.asset('show')
-    # stock.profit('show')
+    stock.statement('save')
+    # stock.statement.asset('save')
+    # stock.statement.profit('save')
+    # stock.statement.rates('save')
+
+
     # stock.products('show', 'bars')
     # stock.products('show', 'pie')
     # stock.marketcap('show')
     # stock.expenses('show')
     # stock.consensus('show')
     # stock.foreigner('show')
-
-    print(stock.multiples.df)
+    
+    # print(stock.multiples.df)
+    print(stock.marketcap.df)

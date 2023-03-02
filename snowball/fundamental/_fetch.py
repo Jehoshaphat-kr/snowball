@@ -38,31 +38,17 @@ def get_statement(ticker:str, **kwargs) -> pd.DataFrame:
     else:
         s.columns = s.iloc[0]
         s.drop(index=s.index[0], inplace=True)
-    return s.T
-
-def get_asset(stat:pd.DataFrame) -> pd.DataFrame:
-    asset = stat[['자산총계', '부채총계', '자본총계']].dropna().astype(int).copy()
-    for col in asset.columns:
-        asset[f'{col}LB'] = asset[col].apply(int2won)
-    return asset
-
-def get_profit(stat:pd.DataFrame) -> pd.DataFrame:
-    key = [_ for _ in ['매출액', '순영업수익', '이자수익', '보험료수익'] if _ in stat.columns][0]
-    profit = stat[[key, '영업이익', '당기순이익']].dropna().astype(int)
-    for col in [key, '영업이익', '당기순이익']:
-        profit[f'{col}LB'] = profit[col].apply(int2won)
-    return profit
+    return s.T.astype(float)
 
 def get_market_cap(ticker:str, todate:str) -> pd.Series:
     fromdate = (datetime.strptime(todate, "%Y%m%d") - timedelta(365 * 5)).strftime("%Y%m%d")
     df = stock.get_market_cap_by_date(fromdate=fromdate, todate=todate, freq='y', ticker=ticker)
     df['시가총액'] = round(df['시가총액'] / 100000000, 1).astype(int)
-    df['시가총액LB'] = df.시가총액.apply(int2won)
-    # df = df.drop(index=[df.index[-1]])
+    # df['시가총액LB'] = df.시가총액.apply(int2won)
     df.index = df.index.strftime("%Y/%m")
     df['reindex'] = df.index[:-1].tolist() + [f"{df.index[-1][:4]}/현재"]
     df = df.set_index(keys='reindex')
-    return df[['시가총액', '시가총액LB']]
+    return df
 
 def get_products(ticker: str) -> pd.DataFrame:
     url = f"http://cdn.fnguide.com/SVO2//json/chart/02/chart_A{ticker}_01_N.json"
@@ -227,19 +213,3 @@ def get_multiple_series(ticker:str) -> pd.DataFrame:
     todate = datetime.today().strftime("%Y%m%d")
     fromdate = (datetime.today() - timedelta(5 * 365)).strftime("%Y%m%d")
     return stock.get_market_fundamental(fromdate, todate, ticker)
-
-
-if __name__ == "__main__":
-    # t = "383310"
-    t = "005930"
-    # df = get_products(ticker=t)
-    # df = get_consensus(ticker=t)
-    # df = get_foreign_rate(ticker=t)
-    # df = get_nps(ticker=t)
-    # df = get_benchmark_return(ticker=t)
-    df = get_multiple_series(ticker=t)
-    print(df)
-
-    df1, df2 = get_multiple_band(ticker=t)
-    print(df1)
-    print(df2)

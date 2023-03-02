@@ -6,7 +6,7 @@ from pykrx.stock import (
     get_index_ticker_name
 )
 from pandas_datareader import get_data_fred
-from snowball.archive import symbols
+from snowball.archive import symbols, label
 from snowball.define import xml2df
 import pandas as pd
 import yfinance as yf
@@ -74,48 +74,15 @@ def fred(symbol: str, prev:datetime, curr:datetime) -> pd.Series:
     return pd.Series(name=symbol, dtype=float, index=fetch.index, data=fetch[symbol])
 
 
-class _fetch(object):
+class _fetch(label):
     __p = 20
     __d = datetime.now(timezone('Asia/Seoul')).date()
-    __u = None
     __t = None
-    def __init__(self, ticker:str, label:str=None):
-        self.ticker = ticker
-        self.label = label
-        self.mode = symbols.locate(symbol=ticker)
-        return
-
-    @property
-    def name(self) -> str:
-        if not hasattr(self, '__name'):
-            if self.mode == 'krx':
-                self.__setattr__('__name', get_index_ticker_name(self.ticker))
-            elif self.mode == 'krse':
-                self.__setattr__('__name', symbols.kr.loc[self.ticker, 'longName'])
-            elif self.mode == 'ecos':
-                self.__setattr__('__name', self.label)
-            else:
-                self.__setattr__('__name', self.ticker)
-        return self.__getattribute__('__name')
-
-    @property
-    def unit(self) -> str:
-        if not self.__u:
-            if self.mode == 'krx': self.__u = '-'
-            elif self.mode == 'krse': self.__u = 'KRW'
-            elif self.mode == 'ecos': self.__u = '%'
-            elif self.mode == 'us': self.__u = 'USD'
-            else: self.__u = '%'
-        return self.__u
-
-    @unit.setter
-    def unit(self, unit:str):
-        self.__u = unit
 
     @property
     def dtype(self) -> str:
         if not self.__t:
-            if self.mode == 'krse': self.__t = ',d'
+            if self.market == 'krse': self.__t = ',d'
             else: self.__t = ',.2f'
         return self.__t
 
@@ -155,15 +122,15 @@ class _fetch(object):
 
         attr = f'__ohlcv{self.enddate}{self.period}'
         if not hasattr(self, attr):
-            if self.mode == 'krx':
+            if self.market == 'krx':
                 self.__setattr__(attr, krx(self.ticker, prev=prev, curr=curr))
-            elif self.mode == 'krse':
+            elif self.market == 'krse':
                 self.__setattr__(attr, krse(self.ticker, prev=prev, curr=curr))
-            elif self.mode == 'ecos':
+            elif self.market == 'ecos':
                 if not self.label:
                     raise KeyError("Label missing")
                 self.__setattr__(attr, ecos(self.ticker, self.label, prev=prev, curr=curr))
-            elif self.mode == 'nyse':
+            elif self.market == 'nyse':
                 self.__setattr__(attr, nyse(self.ticker, self.period))
             else:
                 self.__setattr__(attr, fred(self.ticker,prev=prev, curr=curr))

@@ -29,7 +29,7 @@ class label(object):
            if self.market == 'krx':
                self.__setattr__('__name', get_index_ticker_name(self.ticker))
            elif self.market == 'krse':
-               self.__setattr__('__name', self.kr.loc[self.ticker, 'longName'])
+               self.__setattr__('__name', symbols.kr.loc[self.ticker, 'longName'])
            elif self.market == 'ecos':
                self.__setattr__('__name', self.label)
            else:
@@ -56,3 +56,7 @@ class label(object):
     @unit.setter
     def unit(self, unit: str):
        self.__setattr__('__unit', unit)
+
+    @property
+    def title(self) -> str:
+        return f"{self.name}({self.ticker})"
