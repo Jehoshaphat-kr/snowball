@@ -104,6 +104,7 @@ def get_consensus(ticker:str) -> pd.DataFrame:
     frm.index = pd.to_datetime(frm.index)
     frm['목표주가'] = frm['목표주가'].apply(lambda x: int(x) if x else np.nan)
     frm['종가'] = frm['종가'].astype(int)
+    frm['괴리율'] = round(100 * (frm.종가/frm.목표주가 - 1), 2)
     return frm
 
 def get_foreign_rate(ticker:str) -> pd.DataFrame:

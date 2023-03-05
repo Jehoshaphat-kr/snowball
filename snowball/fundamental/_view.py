@@ -20,6 +20,18 @@ import pandas as pd
 import os
 
 
+def _call(fig: go.Figure or make_subplots or str, mode: str, filedir: str):
+    if mode.startswith('fig'):
+        return fig
+    elif mode.startswith('show'):
+        fig.show()
+    elif mode.startswith('save'):
+        plot(fig, filename=filedir, auto_open=False)
+    else:
+        raise KeyError
+    return
+
+
 class _summary(object):
     """
     Company Guide :: Summary
@@ -144,17 +156,6 @@ class _statement(object):
             hoverinfo='skip'
         )
 
-    def _call(self, fig:go.Figure or make_subplots, mode:str, filename:str):
-        if mode.startswith('fig'):
-            return fig
-        elif mode.startswith('show'):
-            fig.show()
-        elif mode.startswith('save'):
-            plot(fig, filename=os.path.join(getattr(self._p, 'path'), f"{filename}.html"), auto_open=False)
-        else:
-            raise KeyError
-        return
-
     def asset(self, mode:str='show'):
         fig = go.Figure(
             data=[
@@ -184,7 +185,7 @@ class _statement(object):
                 ),
             )
         )
-        self._call(fig=fig, mode=mode, filename='asset')
+        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"asset.html"))
         return
 
     def profit(self, mode:str='show'):
@@ -217,7 +218,7 @@ class _statement(object):
                 ),
             )
         )
-        self._call(fig=fig, mode=mode, filename='profit')
+        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"profit.html"))
         return
 
     def rates(self, mode:str='show'):
@@ -234,8 +235,8 @@ class _statement(object):
                 orientation="h",
                 xanchor="right",
                 yanchor="bottom",
-                x=0.98,
-                y=1.02
+                x=1.0,
+                y=1.04
             ),
         )
         fig.update_yaxes(
@@ -254,7 +255,7 @@ class _statement(object):
             rows=[1, 1, 2, 2],
             cols=[1, 2, 1, 2]
         )
-        self._call(fig=fig, mode=mode, filename='rates')
+        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"rates.html"))
         return
 
 
@@ -290,14 +291,7 @@ class _marketcap(object):
                 )
             )
         )
-        if mode.startswith('fig'):
-            return fig
-        elif mode.startswith('show'):
-            fig.show()
-        elif mode.startswith('save'):
-            plot(fig, filename=os.path.join(getattr(self._p, 'path'), f"marketcap.html"), auto_open=False)
-        else:
-            raise KeyError
+        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"marketcap.html"))
         return
 
     @property
@@ -313,6 +307,7 @@ class _marketcap(object):
             y=self.df.시가총액,
             showlegend=True,
             visible=True,
+            opacity=0.9,
             text=self.df.시가총액.apply(int2won),
             textposition="inside",
             texttemplate='%{text}',
@@ -320,221 +315,230 @@ class _marketcap(object):
         )
 
 
-# class _product(object):
-#     def __init__(self, ticker:str, name:str):
-#         self._t, self._n = ticker, name
-#     def __call__(self, call: str = 'figure', mode:str='bars'):
-#         _call_validator(call)
-#         if mode == 'bars':
-#             layout = self.layout
-#             data = self.traces
-#         elif mode == 'pie':
-#             layout = self.layout
-#             layout.xaxis = None
-#             layout.yaxis = None
-#             data = self.pie
-#         else:
-#             raise KeyError
-#
-#         if call in ['figure', 'show']:
-#             fig = go.Figure(data=data, layout=layout)
-#             if call == 'figure':
-#                 return fig
-#             else:
-#                 fig.show()
-#                 return
-#         elif call.startswith('trace'):
-#             return data
-#         else:
-#             return self.df
-#     @property
-#     def df(self) -> pd.DataFrame:
-#         if not hasattr(self, '__df'):
-#             self.__setattr__('__df', get_products(self._t))
-#         return self.__getattribute__('__df')
-#     @property
-#     def traces(self) -> list:
-#         return [
-#             go.Bar(
-#                 name=f"{c}",
-#                 x=self.df.index,
-#                 y=self.df[c],
-#                 showlegend=True,
-#                 legendgroup=c,
-#                 visible=True,
-#                 marker=dict(color=colors[n]),
-#                 opacity=0.9,
-#                 textposition="inside",
-#                 texttemplate=c + "<br>%{y:.2f}%",
-#                 hovertemplate=c + "<br>%{y:.2f}%<extra></extra>"
-#             ) for n, c in enumerate(self.df.columns)
-#         ]
-#     @property
-#     def pie(self) -> list:
-#         df = get_products_recent(self._t, self.df)
-#         return [
-#             go.Pie(
-#                 labels=df.index,
-#                 values=df,
-#                 showlegend=True,
-#                 visible=True,
-#                 automargin=True,
-#                 opacity=0.9,
-#                 textfont=dict(color='white'),
-#                 textinfo='label+percent',
-#                 insidetextorientation='radial',
-#                 hoverinfo='label+percent',
-#             )
-#         ]
-#
-#     @property
-#     def layout(self) -> go.Layout:
-#         return go.Layout(
-#             title=f"<b>{self._n}({self._t})</b> Products",
-#             plot_bgcolor='white',
-#             barmode='stack',
-#             legend=dict(
-#                 orientation="h",
-#                 xanchor="right",
-#                 yanchor="bottom",
-#                 x=0.96,
-#                 y=1
-#             ),
-#             xaxis=dict(
-#                 title='기말'
-#             ),
-#             yaxis=dict(
-#                 title='비율 [%]',
-#                 showgrid=True,
-#                 gridcolor='lightgrey',
-#                 zeroline=True,
-#                 zerolinecolor='lightgrey'
-#             ),
-#         )
-#
-#
-# class _expenses(object):
-#     def __init__(self, ticker:str, name:str, stat:_state):
-#         self._t, self._n, self._s = ticker, name, stat
-#     def __call__(self, call: str = 'figure'):
-#         _call_validator(call)
-#         if call in ['figure', 'show']:
-#             fig = make_subplots(
-#                 rows=2, cols=2,
-#                 subplot_titles=["Profit Rate", "Sales Cost Rate", "Sales and Management Cost Rate", "R&D Investment Rate"],
-#                 x_title="기말",
-#                 y_title="[%]",
-#             ).add_traces(data=self.traces, rows=[1, 1, 2, 2], cols=[1, 2, 1, 2])
-#             fig.update_layout(self.layout)
-#             fig.update_yaxes(dict(showgrid=True, gridcolor='lightgrey'))
-#             if call == 'figure':
-#                 return fig
-#             else:
-#                 fig.show()
-#                 return
-#         elif call.startswith('trace'):
-#             return self.traces
-#         else:
-#             return self.df
-#     @property
-#     def df(self) -> pd.DataFrame:
-#         if not hasattr(self, '__df'):
-#             self.__setattr__('__df', get_expenses(self._t))
-#         return self.__getattribute__('__df')
-#     @property
-#     def traces(self) -> list:
-#         return [
-#             go.Scatter(
-#                 name=c,
-#                 x=(self.df if n else self._s.df).index,
-#                 y=(self.df[c].dropna() if n else self._s.df[c]).astype(float),
-#                 showlegend=True,
-#                 visible=True,
-#                 mode='lines+markers+text',
-#                 textposition="top center",
-#                 texttemplate="%{y:.2f}%",
-#                 hovertemplate='%{x}: %{y:.2f}%<extra></extra>'
-#             ) for n, c in enumerate(("영업이익률", "매출원가율", "판관비율", "R&D투자비중"))
-#         ]
-#     @property
-#     def layout(self) -> dict:
-#         return dict(
-#             title=f"<b>{self._n}({self._t})</b> Profit Rate and Expenses",
-#             plot_bgcolor='white',
-#             legend=dict(
-#                 orientation="h",
-#                 xanchor="right",
-#                 yanchor="bottom",
-#                 x=1,
-#                 y=1.04
-#             ),
-#         )
-#
-#
-# class _consensus(object):
-#     def __init__(self, ticker:str, name:str):
-#         self._t, self._n = ticker, name
-#
-#     def __call__(self, call: str = 'figure'):
-#         _call_validator(call)
-#         if call in ['figure', 'show']:
-#             fig = go.Figure(data=self.traces, layout=self.layout)
-#             if call == 'figure':
-#                 return fig
-#             else:
-#                 fig.show()
-#                 return
-#         elif call.startswith('trace'):
-#             return self.traces
-#         else:
-#             return self.df
-#     @property
-#     def df(self) -> pd.DataFrame:
-#         if not hasattr(self, '__df'):
-#             self.__setattr__('__df', get_consensus(self._t))
-#         return self.__getattribute__('__df')
-#     @property
-#     def traces(self) -> list:
-#         return [
-#             go.Scatter(
-#                 name=c,
-#                 x=self.df.index,
-#                 y=self.df[c],
-#                 showlegend=True,
-#                 visible=True,
-#                 mode='lines',
-#                 line=dict(color=colors[n] if n else 'black', dash=None if n else 'dot'),
-#                 xhoverformat='%Y/%m/%d',
-#                 yhoverformat=',d',
-#                 hovertemplate="%{y}원<extra></extra>"
-#             ) for n, c in enumerate(("목표주가", "종가"))
-#         ]
-#     @property
-#     def layout(self) -> go.Layout:
-#         return go.Layout(
-#             title=f"<b>{self._n}({self._t})</b> Consensus",
-#             plot_bgcolor='white',
-#             legend=dict(
-#                 orientation="h",
-#                 xanchor="right",
-#                 yanchor="bottom",
-#                 x=1,
-#                 y=1.04
-#             ),
-#             hovermode="x unified",
-#             xaxis=dict(
-#                 title='날짜',
-#                 showticklabels=True,
-#                 showgrid=True,
-#                 gridcolor='lightgrey',
-#             ),
-#             yaxis=dict(
-#                 title='[원]',
-#                 showgrid=True,
-#                 gridcolor='lightgrey',
-#             )
-#         )
-#
+class _product(object):
+    """
+    Company Guide :: Product
+    """
+
+    def __init__(self, parent: label or None):
+        self._p = parent
+
+    def __call__(self, mode: str = 'show'):
+        if mode.startswith('fig'):
+            return self.yearly(mode), self.recent(mode)
+        self.yearly(mode)
+        self.recent(mode)
+        return
+
+    @property
+    def df(self) -> pd.DataFrame:
+        if not hasattr(self, '__df'):
+            self.__setattr__('__df', get_products(self._p.ticker))
+        return self.__getattribute__('__df')
+
+    def _bar_products(self) -> list:
+        return [
+            go.Bar(
+                name=f"{c}",
+                x=self.df.index,
+                y=self.df[c],
+                showlegend=True,
+                legendgroup=c,
+                visible=True,
+                marker=dict(color=colors[n]),
+                opacity=0.9,
+                textposition="inside",
+                texttemplate=c + "<br>%{y:.2f}%",
+                hovertemplate=c + "<br>%{y:.2f}%<extra></extra>"
+            ) for n, c in enumerate(self.df.columns)
+        ]
+
+    def _pie_product(self) -> list:
+        df = get_products_recent(self._p.ticker, self.df)
+        return [
+            go.Pie(
+                labels=df.index,
+                values=df,
+                showlegend=True,
+                visible=True,
+                automargin=True,
+                opacity=0.9,
+                textfont=dict(color='white'),
+                textinfo='label+percent',
+                insidetextorientation='radial',
+                hoverinfo='label+percent',
+            )
+        ]
+
+    def yearly(self, mode: str = 'show'):
+        fig = go.Figure(
+            data=self._bar_products(),
+            layout=go.Layout(
+                title=f"<b>{self._p.name}({self._p.ticker})</b> Products",
+                plot_bgcolor='white',
+                barmode='stack',
+                legend=dict(
+                    orientation="h",
+                    xanchor="right",
+                    yanchor="bottom",
+                    x=0.96,
+                    y=1
+                ),
+                xaxis=dict(
+                    title='기말'
+                ),
+                yaxis=dict(
+                    title='비율 [%]',
+                    showgrid=True,
+                    gridcolor='lightgrey',
+                    zeroline=True,
+                    zerolinecolor='lightgrey'
+                ),
+            )
+        )
+        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"products_yy.html"))
+        return
+
+    def recent(self, mode: str = 'show'):
+        fig = go.Figure(
+            data=self._pie_product(),
+            layout = go.Layout(
+                title=f"<b>{self._p.name}({self._p.ticker})</b> Products",
+                plot_bgcolor='white',
+                legend=dict(
+                    orientation="h",
+                    xanchor="right",
+                    yanchor="bottom",
+                    x=0.96,
+                    y=1
+                ),
+            )
+        )
+        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"products.html"))
+        return
+
+
+class _expenses(object):
+    """
+    Company Guide :: Expenses
+    """
+
+    def __init__(self, parent: label or None):
+        self._p = parent
+
+    def __call__(self, mode: str = 'show'):
+        fig = make_subplots(
+            rows=2, cols=2,
+            subplot_titles=["Profit Rate", "Sales Cost Rate", "Sales and Management Cost Rate", "R&D Investment Rate"],
+            x_title="기말",
+            y_title="[%]",
+        )
+        fig.add_traces(
+            data=[
+                getattr(self._p.statement, '_line_rates')('영업이익률'),
+                self._line(col="매출원가율"),
+                self._line(col="판관비율"),
+                self._line(col="R&D투자비중")
+            ],
+            rows=[1, 1, 2, 2],
+            cols=[1, 2, 1, 2]
+        )
+        fig.update_layout(
+            title=f"<b>{self._p.name}({self._p.ticker})</b> Profit Rate and Expenses",
+            plot_bgcolor='white',
+            legend=dict(
+                orientation="h",
+                xanchor="right",
+                yanchor="bottom",
+                x=1,
+                y=1.04
+            ),
+        )
+        fig.update_yaxes(dict(showgrid=True, gridcolor='lightgrey'))
+        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"expenses.html"))
+        return
+
+    @property
+    def df(self) -> pd.DataFrame:
+        if not hasattr(self, '__df'):
+            self.__setattr__('__df', get_expenses(self._p.ticker))
+        return self.__getattribute__('__df')
+
+    def _line(self, col:str):
+        return go.Scatter(
+            name=col,
+            x=self.df.index,
+            y=self.df[col].astype(float),
+            showlegend=True,
+            visible=True,
+            mode='lines+markers+text',
+            textposition="top center",
+            texttemplate="%{y:.2f}%",
+            hovertemplate='%{x}: %{y:.2f}%<extra></extra>'
+        )
+
+
+class _consensus(object):
+    def __init__(self, parent:label or None):
+        self._p = parent
+
+    def __call__(self, mode:str = 'show'):
+        fig = go.Figure(
+            data=[
+                self._line(col='목표주가'),
+                self._line(col='종가')
+            ],
+            layout=go.Layout(
+                title=f"<b>{self._p.name}({self._p.ticker})</b> Consensus",
+                plot_bgcolor='white',
+                legend=dict(
+                    orientation="h",
+                    xanchor="right",
+                    yanchor="bottom",
+                    x=1,
+                    y=1.04
+                ),
+                hovermode="x unified",
+                xaxis=dict(
+                    title='날짜',
+                    showticklabels=True,
+                    showgrid=True,
+                    gridcolor='lightgrey',
+                ),
+                yaxis=dict(
+                    title='[원]',
+                    showgrid=True,
+                    gridcolor='lightgrey',
+                )
+            )
+        )
+        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"consensus.html"))
+        return
+
+    @property
+    def df(self) -> pd.DataFrame:
+        if not hasattr(self, '__df'):
+            self.__setattr__('__df', get_consensus(self._p.ticker))
+        return self.__getattribute__('__df')
+
+    def _line(self, col:str):
+        return go.Scatter(
+            name=col,
+            x=self.df.index,
+            y=self.df[col],
+            showlegend=True,
+            visible=True,
+            mode='lines',
+            line=dict(
+                color='black' if col.endswith('종가') else colors[1],
+                dash='dot' if col.endswith('종가') else None
+            ),
+            meta=self.df.괴리율 if col.endswith('종가') else None,
+            xhoverformat='%Y/%m/%d',
+            yhoverformat=',d',
+            hovertemplate="%{y}원" + ("(%{meta}%)" if col.endswith('종가') else '') + "<extra></extra>"
+        )
+
 # class _foreigner(object):
 #     def __init__(self, ticker:str, name:str):
 #         self._t, self._n, self._m = ticker, name, 'plot'

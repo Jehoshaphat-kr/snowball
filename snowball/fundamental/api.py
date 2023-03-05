@@ -3,9 +3,9 @@ from snowball.fundamental._view import (
     _summary,
     _statement,
     _marketcap,
-    # _product,
-    # _expenses,
-    # _consensus,
+    _product,
+    _expenses,
+    _consensus,
     # _foreigner,
     # _multiple
 )
@@ -46,15 +46,34 @@ class KrseStock(TimeSeries):
           - 
         '''
         self.marketcap = _marketcap(self)
-        #
-        # self.products = _product(self.ticker, self.name)
-        #
-        # self.marketcap = _marketcap(self.ticker, self.name, self.enddate)
-        #
-        # self.expenses = _expenses(self.ticker, self.name, self.statement)
-        #
-        # self.consensus = _consensus(self.ticker, self.name)
-        #
+
+        '''
+        Products
+        1) Attributes
+          - df: source dataframe
+        2) Method
+          - yearly(mode:str)
+          - recent(mode:str)
+        '''
+        self.products = _product(self)
+
+
+        '''
+        Expenses
+        1) Attributes
+          - df: source datatframe
+        '''
+        self.expenses = _expenses(self)
+
+        '''
+        Consensus
+        1) Attributes
+          - df: source dataframe
+        2) Method
+          - __call__: default consensus status
+        '''
+        self.consensus = _consensus(self)
+
         # self.foreigner = _foreigner(self.ticker, self.name)
         #
         # self.multiples = _multiple(self.ticker, self.name)
@@ -102,21 +121,21 @@ if __name__ == "__main__":
     t = '012330'
     # t = '017670'
     stock = KrseStock(ticker=t)
-    stock.path = rf'\\kefico\keti\ENT\Softroom\Temp\J.H.Lee\snob\{stock.ticker} {stock.name}'
+    # stock.path = rf'\\kefico\keti\ENT\Softroom\Temp\J.H.Lee\snob\{stock.ticker} {stock.name}'
 
     # stock.summary('show')
-    stock.statement('save')
+    # stock.statement('save')
     # stock.statement.asset('save')
     # stock.statement.profit('save')
     # stock.statement.rates('save')
-
-
-    # stock.products('show', 'bars')
-    # stock.products('show', 'pie')
-    # stock.marketcap('show')
+    # stock.marketcap('save')
+    # stock.products('save')
+    # stock.products.yearly('show')
+    # stock.products.recent('show')
     # stock.expenses('show')
-    # stock.consensus('show')
+    stock.consensus('show')
+
     # stock.foreigner('show')
     
     # print(stock.multiples.df)
-    print(stock.marketcap.df)
+    # print(stock.marketcap.df)
