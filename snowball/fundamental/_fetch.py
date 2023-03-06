@@ -156,7 +156,7 @@ def get_benchmark_return(ticker:str):
             ].set_index(keys='TRD_DT').rename(columns=header.set_index(keys='ID').to_dict()['PREF_NAME'])
         inner.index = pd.to_datetime(inner.index)
         objs[period] = inner
-    return pd.concat(objs=objs, axis=1)
+    return pd.concat(objs=objs, axis=1).astype(float)
 
 def get_benchmark_multiple(ticker:str) -> pd.DataFrame:
     url = f"http://cdn.fnguide.com/SVO2/json/chart/01_04/chart_A{ticker}_D.json"

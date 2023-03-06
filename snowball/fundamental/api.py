@@ -7,7 +7,8 @@ from snowball.fundamental._view import (
     _expenses,
     _consensus,
     _foreigner,
-    _multiple
+    _multiple,
+    _benchmark
 )
 import os
 
@@ -91,6 +92,15 @@ class KrseStock(TimeSeries):
           - __call__: default multiples status
         '''
         self.multiples = _multiple(self)
+
+        '''
+        Benchmark
+        1) Attributes
+          - df: source dataframe
+        2) Method
+          - __call__: default benchmark series
+        '''
+        self.benchmark = _benchmark(self)
         return
 
     @property
@@ -132,7 +142,7 @@ if __name__ == "__main__":
     t = '316140'
     # t = '017670'
     stock = KrseStock(ticker=t)
-    stock.path = rf'\\kefico\keti\ENT\Softroom\Temp\J.H.Lee\snob\{stock.ticker} {stock.name}'
+    # stock.path = rf'\\kefico\keti\ENT\Softroom\Temp\J.H.Lee\snob\{stock.ticker} {stock.name}'
 
     # stock.summary('show')
     # stock.statement('save')
@@ -145,7 +155,9 @@ if __name__ == "__main__":
     # stock.products.recent('show')
     # stock.expenses('show')
     # stock.consensus('show')
-    stock.foreigner('save')
-    # stock.multiples('save')
+    # stock.foreigner('show')
+    stock.multiples('show')
+    stock.benchmark('show')
+
 
     # print(stock.multiples.df)

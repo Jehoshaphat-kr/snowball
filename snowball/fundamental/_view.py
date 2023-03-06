@@ -559,12 +559,13 @@ class _foreigner(object):
         fig.update_layout(
             title=f"<b>{self._p.name}({self._p.ticker})</b> Foreign Rate",
             plot_bgcolor='white',
+            margin=dict(r=0),
             legend=dict(
                 orientation="h",
                 xanchor="right",
                 yanchor="bottom",
                 x=1,
-                y=1.04
+                y=1
             ),
             hovermode="x unified",
             xaxis=dict(
@@ -581,6 +582,33 @@ class _foreigner(object):
             yaxis2=dict(
                 title='[%]'
             ),
+            updatemenus=[
+                dict(
+                    type="buttons",
+                    direction="right",
+                    active=0,
+                    xanchor='left', x=0.0,
+                    yanchor='bottom', y=1.0,
+                    buttons=list([
+                        dict(
+                            label="3개월",
+                            method="update",
+                            args=[{"visible": [True, True, False, False, False, False]}]
+                        ),
+                        dict(
+                            label="1년",
+                            method="update",
+                            args=[{"visible": [False, False,True, True, False, False]}]
+                        ),
+                        dict(
+                            label="3년",
+                            method="update",
+                            args=[{"visible": [False, False, False, False, True, True]}]
+                        ),
+                    ]),
+                )
+            ]
+
         )
         return _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"foreigner.html"))
 
@@ -592,17 +620,16 @@ class _foreigner(object):
 
     def _line(self, c1:str, c2:str):
         return go.Scatter(
-            name=c1,
+            name=c2,
             x=self.df[c1][c2].dropna().index,
             y=self.df[c1][c2].dropna(),
-            showlegend=True if '종가' in c2 else False,
-            legendgroup=c1,
-            visible=True if c1 == '3M' else 'legendonly',
+            showlegend=True,
+            visible=True if c1 == '3M' else False,
             mode='lines',
             line=dict(color='black' if '종가' in c2 else colors[0], dash='dot' if '종가' in c2 else None),
             xhoverformat="%Y/%m/%d",
             yhoverformat=',d' if '종가' in c2 else '.2f',
-            hovertemplate=c2 + ': %{y}' + ('원' if '종가' in c2 else '%') + '<extra></extra>'
+            hovertemplate='%{y}' + ('원' if '종가' in c2 else '%') + '<extra></extra>'
         )
 
 
@@ -634,12 +661,13 @@ class _multiple(object):
         fig.update_layout(
             title=f"<b>{self._p.name}({self._p.ticker})</b> Multiples",
             plot_bgcolor='white',
+            margin=dict(r=0),
             legend=dict(
                 orientation="h",
                 xanchor="right",
                 yanchor="bottom",
-                x=1,
-                y=1.04
+                x=0.98,
+                y=1.02
             ),
         )
         fig.update_xaxes(
@@ -672,8 +700,11 @@ class _multiple(object):
     def _line(self, c1:str, c2:str):
         df = self.df[c1][c2].dropna()
         cd = c2.endswith('가') or c2 == 'EPS' or c2 == 'BPS'
+        if c2.endswith('가'):
+            p = self._p.ohlcv.종가
+            df = p[p.index > df.index[0]]
         return go.Scatter(
-            name=c2,
+            name='종가' if c2.endswith('가') else c2,
             x=df.index,
             y=df,
             showlegend=False if c2.endswith('가') or ('X' in c2) else True,
@@ -700,10 +731,56 @@ class _benchmark(object):
         fig = go.Figure(
             data=[self._line(c1, c2) for c1, c2 in self.df.columns],
             layout=go.Layout(
-
+                title=f"<b>{self._p.name}({self._p.ticker})</b> Benchmark",
+                plot_bgcolor='white',
+                legend=dict(
+                    orientation="h",
+                    xanchor="right",
+                    yanchor="bottom",
+                    x=1,
+                    y=1
+                ),
+                hovermode="x unified",
+                xaxis=dict(
+                    title='날짜',
+                    tickformat="%Y/%m/%d",
+                    showticklabels=True,
+                    showgrid=True,
+                    gridcolor='lightgrey',
+                ),
+                yaxis=dict(
+                    title='[%]',
+                    showgrid=True,
+                    gridcolor='lightgrey',
+                ),
+                updatemenus=[
+                    dict(
+                        type="buttons",
+                        direction="right",
+                        active=0,
+                        x=0.1, y=1.0,
+                        buttons=list([
+                            dict(
+                                label="3개월",
+                                method="update",
+                                args=[{"visible": [True, True, True, False, False, False, False, False, False]}]
+                            ),
+                            dict(
+                                label="1년",
+                                method="update",
+                                args=[{"visible": [False, False, False, True, True, True, False, False, False]}]
+                            ),
+                            dict(
+                                label="3년",
+                                method="update",
+                                args=[{"visible": [False, False, False, False, False, False, True, True, True]}]
+                            ),
+                        ]),
+                    )
+                ]
             )
         )
-        return
+        return _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"benchmark.html"))
 
     @property
     def df(self) -> pd.DataFrame:
@@ -715,10 +792,10 @@ class _benchmark(object):
         ky = self.df[c1].columns[0]
         df = self.df[c1][c2].dropna()
         return go.Scatter(
-            name=c1,
+            name=c2,
             x=df.index,
             y=df,
-            showlegend=True if c2 == ky else False,
+            showlegend=True,
             visible=True if c1 == '3M' else False,
             mode='lines',
             line=dict(
@@ -727,5 +804,5 @@ class _benchmark(object):
             ),
             xhoverformat='%Y/%m/%d',
             yhoverformat='.2f',
-            hovertemplate=c2 + ': %{y}%<extra></extra>'
+            hovertemplate='%{y}%<extra></extra>'
         )
