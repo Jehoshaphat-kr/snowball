@@ -6,8 +6,8 @@ from snowball.fundamental._view import (
     _product,
     _expenses,
     _consensus,
-    # _foreigner,
-    # _multiple
+    _foreigner,
+    _multiple
 )
 import os
 
@@ -74,9 +74,23 @@ class KrseStock(TimeSeries):
         '''
         self.consensus = _consensus(self)
 
-        # self.foreigner = _foreigner(self.ticker, self.name)
-        #
-        # self.multiples = _multiple(self.ticker, self.name)
+        '''
+        Foreigner
+        1) Attributes
+          - df: source dataframe
+        2) Method
+          - __call__: default foreigner status with 3M / 1Y / 3Y optional
+        '''
+        self.foreigner = _foreigner(self)
+
+        '''
+        Multiples (Time-series)
+        1) Attributes
+          - df: source dataframe
+        2) Method
+          - __call__: default multiples status
+        '''
+        self.multiples = _multiple(self)
         return
 
     @property
@@ -88,10 +102,6 @@ class KrseStock(TimeSeries):
         if not os.path.isdir(path):
             os.makedirs(path)
         self.__p = path
-
-
-
-
 
 # class _trace(fnguide):
 #     @property
@@ -113,15 +123,16 @@ class KrseStock(TimeSeries):
 #         )
 #         return go.Figure(data=traces, layout=layout)
 
+
 if __name__ == "__main__":
 
     # tester.SUPPLY.show()
     # tester.MULTIFACTOR.show()
 
-    t = '012330'
+    t = '316140'
     # t = '017670'
     stock = KrseStock(ticker=t)
-    # stock.path = rf'\\kefico\keti\ENT\Softroom\Temp\J.H.Lee\snob\{stock.ticker} {stock.name}'
+    stock.path = rf'\\kefico\keti\ENT\Softroom\Temp\J.H.Lee\snob\{stock.ticker} {stock.name}'
 
     # stock.summary('show')
     # stock.statement('save')
@@ -133,9 +144,8 @@ if __name__ == "__main__":
     # stock.products.yearly('show')
     # stock.products.recent('show')
     # stock.expenses('show')
-    stock.consensus('show')
+    # stock.consensus('show')
+    stock.foreigner('save')
+    # stock.multiples('save')
 
-    # stock.foreigner('show')
-    
     # print(stock.multiples.df)
-    # print(stock.marketcap.df)

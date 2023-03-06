@@ -208,9 +208,15 @@ def get_multiple_band(ticker:str) -> (pd.DataFrame, pd.DataFrame):
     per = df[per_header.keys()].replace('-', np.NaN).replace('', np.NaN)
     pbr = df[pbr_header.keys()].replace('-', np.NaN).replace('', np.NaN)
     per['GS_YM'], pbr['GS_YM'] = pd.to_datetime(per['GS_YM']), pd.to_datetime(pbr['GS_YM'])
-    return per.rename(columns=per_header).set_index(keys='날짜'), pbr.rename(columns=pbr_header).set_index(keys='날짜')
+    return per.rename(columns=per_header).set_index(keys='날짜').astype(float),\
+           pbr.rename(columns=pbr_header).set_index(keys='날짜').astype(float)
 
 def get_multiple_series(ticker:str) -> pd.DataFrame:
     todate = datetime.today().strftime("%Y%m%d")
     fromdate = (datetime.today() - timedelta(5 * 365)).strftime("%Y%m%d")
     return stock.get_market_fundamental(fromdate, todate, ticker)
+
+
+if __name__ == "__main__":
+    # df1, df2 = get_multiple_band(ticker='005930')
+    print(get_benchmark_return('005930'))

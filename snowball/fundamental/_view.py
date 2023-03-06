@@ -13,7 +13,8 @@ from snowball.fundamental._fetch import (
     get_consensus,
     get_foreign_rate,
     get_multiple_series,
-    get_multiple_band
+    get_multiple_band,
+    get_benchmark_return
 )
 import plotly.graph_objects as go
 import pandas as pd
@@ -291,8 +292,7 @@ class _marketcap(object):
                 )
             )
         )
-        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"marketcap.html"))
-        return
+        return _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"marketcap.html"))
 
     @property
     def df(self) -> pd.DataFrame:
@@ -455,8 +455,7 @@ class _expenses(object):
             ),
         )
         fig.update_yaxes(dict(showgrid=True, gridcolor='lightgrey'))
-        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"expenses.html"))
-        return
+        return _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"expenses.html"))
 
     @property
     def df(self) -> pd.DataFrame:
@@ -512,8 +511,7 @@ class _consensus(object):
                 )
             )
         )
-        _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"consensus.html"))
-        return
+        return _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"consensus.html"))
 
     @property
     def df(self) -> pd.DataFrame:
@@ -539,142 +537,195 @@ class _consensus(object):
             hovertemplate="%{y}원" + ("(%{meta}%)" if col.endswith('종가') else '') + "<extra></extra>"
         )
 
-# class _foreigner(object):
-#     def __init__(self, ticker:str, name:str):
-#         self._t, self._n, self._m = ticker, name, 'plot'
-#     def __call__(self, call: str = 'figure', mode: str='plot'):
-#         _call_validator(call)
-#         self._m = mode
-#         if call in ['figure', 'show']:
-#             fig = make_subplots(
-#                 rows=1 if mode == 'plot' else 3, cols=1,
-#                 x_title='날짜',
-#                 subplot_titles=None if mode == 'plot' else ['3M', '1Y', '3Y'],
-#                 vertical_spacing=None if mode == 'plot' else 0.08,
-#                 specs=[
-#                     [{'secondary_y': True}]
-#                 ] if mode == 'plot' else [
-#                     [{"secondary_y": True}],
-#                     [{"secondary_y": True}],
-#                     [{"secondary_y": True}]
-#                 ]
-#             )
-#             fig.add_traces(
-#                 data=self.traces,
-#                 rows=[1, 1, 1, 1, 1, 1] if mode == 'plot' else [1, 1, 2, 2, 3, 3],
-#                 cols=[1, 1, 1, 1, 1, 1],
-#                 secondary_ys=[False, True, False, True, False, True]
-#             )
-#             fig.update_layout(self.layout)
-#             return fig if call == 'figure' else fig.show()
-#         elif call.startswith('trace'):
-#             return self.traces
-#         else:
-#             return self.df
-#     @property
-#     def df(self) -> pd.DataFrame:
-#         if not hasattr(self, '__df'):
-#             self.__setattr__('__df', get_foreign_rate(self._t))
-#         return self.__getattribute__('__df')
-#     @property
-#     def traces(self):
-#         return [
-#             go.Scatter(
-#                 name=t if self._m == 'plot' else c,
-#                 x=self.df[t][c].dropna().index,
-#                 y=self.df[t][c].dropna(),
-#                 showlegend=True if (self._m == 'plot' and '종가' in c) or (not self._m == 'plot' and t == '3M') else False,
-#                 legendgroup=t if self._m == 'plot' else c,
-#                 visible=True if (not self._m == 'plot') or (self._m == 'plot' and t == '3M') else 'legendonly',
-#                 mode='lines',
-#                 line=dict(color='black' if '종가' in c else colors[0], dash='dot' if '종가' in c else None),
-#                 xhoverformat="%Y/%m/%d",
-#                 yhoverformat=',d' if '종가' in c else '.2f',
-#                 hovertemplate='%{y}' + ('원' if '종가' in c else '%') + '<extra></extra>'
-#             ) for t, c in self.df.columns
-#         ]
-#     @property
-#     def layout(self):
-#         return dict(
-#             title=f"<b>{self._n}({self._t})</b> Foreign Rate",
-#             plot_bgcolor='white',
-#             legend=dict(
-#                 orientation="h",
-#                 xanchor="right",
-#                 yanchor="bottom",
-#                 x=1,
-#                 y=1.04
-#             ),
-#             hovermode="x unified",
-#             xaxis=dict(
-#                 tickformat="%Y/%m/%d",
-#                 showticklabels=True,
-#                 showgrid=True,
-#                 gridcolor='lightgrey',
-#             ),
-#             xaxis2=dict(
-#                 tickformat="%Y/%m/%d",
-#                 showticklabels=True,
-#                 showgrid=True,
-#                 gridcolor='lightgrey',
-#             ),
-#             xaxis3=dict(
-#                 tickformat="%Y/%m/%d",
-#                 showticklabels=True,
-#                 showgrid=True,
-#                 gridcolor='lightgrey',
-#             ),
-#             yaxis=dict(
-#                 title='[원]',
-#                 showgrid=True,
-#                 gridcolor='lightgrey',
-#             ),
-#             yaxis2=dict(
-#                 title='[%]'
-#             ),
-#             yaxis3=dict(
-#                 title='[원]',
-#                 showgrid=True,
-#                 gridcolor='lightgrey',
-#             ),
-#             yaxis4=dict(
-#                 title='[%]'
-#             ),
-#             yaxis5=dict(
-#                 title='[원]',
-#                 showgrid=True,
-#                 gridcolor='lightgrey',
-#             ),
-#             yaxis6=dict(
-#                 title='[%]'
-#             )
-#         )
-#
-# class _multiple(object):
-#     label = [
-#         "per", "pbr", "div", "bps", "eps", "dps",
-#         "adj_close",
-#         "per_low", "per_midlow", "per_mid", "per_midhigh", "per_high",
-#         "pbr_low", "pbr_midlow", "pbr_mid", "pbr_midhigh", "pbr_high"
-#     ]
-#     def __init__(self, ticker:str, name:str):
-#         self._t, self._n = ticker, name
-#     def __call__(self):
-#         return
-#     @property
-#     def df(self) -> pd.DataFrame:
-#         if not hasattr(self, '__df'):
-#             per_bnd, pbr_bnd = get_multiple_band(self._t)
-#             self.__setattr__('__df', (get_multiple_series(self._t), per_bnd, pbr_bnd))
-#         return self.__getattribute__('__df')
-#     def traces(self, select:str='all'):
-#         df1, df2, df3 = self.df
-#         traces = [
-#             go.Scatter(
-#                 name=c,
-#                 x=df1.index,
-#                 y=df1[c],
-#                 showlegend=True,
-#                 legendgroup=c
-#             ) for c in df1.columns
-#         ]
+
+class _foreigner(object):
+    def __init__(self, parent:label or None):
+        self._p = parent
+
+    def __call__(self, mode:str='show'):
+        fig = make_subplots(
+            rows=1, cols=1,
+            x_title='날짜',
+            specs=[
+                [{'secondary_y': True}]
+            ]
+        )
+        fig.add_traces(
+            data=[self._line(c1, c2) for c1, c2 in self.df.columns],
+            rows=[1, 1, 1, 1, 1, 1],
+            cols=[1, 1, 1, 1, 1, 1],
+            secondary_ys=[False, True, False, True, False, True]
+        )
+        fig.update_layout(
+            title=f"<b>{self._p.name}({self._p.ticker})</b> Foreign Rate",
+            plot_bgcolor='white',
+            legend=dict(
+                orientation="h",
+                xanchor="right",
+                yanchor="bottom",
+                x=1,
+                y=1.04
+            ),
+            hovermode="x unified",
+            xaxis=dict(
+                tickformat="%Y/%m/%d",
+                showticklabels=True,
+                showgrid=True,
+                gridcolor='lightgrey',
+            ),
+            yaxis=dict(
+                title='[원]',
+                showgrid=True,
+                gridcolor='lightgrey',
+            ),
+            yaxis2=dict(
+                title='[%]'
+            ),
+        )
+        return _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"foreigner.html"))
+
+    @property
+    def df(self) -> pd.DataFrame:
+        if not hasattr(self, '__df'):
+            self.__setattr__('__df', get_foreign_rate(self._p.ticker))
+        return self.__getattribute__('__df')
+
+    def _line(self, c1:str, c2:str):
+        return go.Scatter(
+            name=c1,
+            x=self.df[c1][c2].dropna().index,
+            y=self.df[c1][c2].dropna(),
+            showlegend=True if '종가' in c2 else False,
+            legendgroup=c1,
+            visible=True if c1 == '3M' else 'legendonly',
+            mode='lines',
+            line=dict(color='black' if '종가' in c2 else colors[0], dash='dot' if '종가' in c2 else None),
+            xhoverformat="%Y/%m/%d",
+            yhoverformat=',d' if '종가' in c2 else '.2f',
+            hovertemplate=c2 + ': %{y}' + ('원' if '종가' in c2 else '%') + '<extra></extra>'
+        )
+
+
+class _multiple(object):
+    def __init__(self, parent:label or None):
+        self._p = parent
+        return
+
+    def __call__(self, mode:str='show'):
+        fig = make_subplots(
+            rows=2, cols=2,
+            subplot_titles=["PER & EPS", "PBR & BPS", "PER Band", "PBR Band"],
+            x_title="날짜",
+            vertical_spacing=0.1, horizontal_spacing=0.08,
+            specs=[
+                [{'secondary_y': True}, {'secondary_y': True}],
+                [{'secondary_y': False}, {'secondary_y': False}]
+            ]
+        )
+        fig.add_traces(
+            data=[
+                self._line('multiple', 'PER'), self._line('multiple', 'EPS'),
+                self._line('multiple', 'PBR'), self._line('multiple', 'BPS'),
+            ] + self._line_bands('per_band') + self._line_bands('pbr_band'),
+            rows=[1, 1, 1, 1] + [2] * 12,
+            cols=[1, 1, 2, 2] + [1] * 6 + [2] * 6,
+            secondary_ys=[False, True, False, True] + [False] * 12
+        )
+        fig.update_layout(
+            title=f"<b>{self._p.name}({self._p.ticker})</b> Multiples",
+            plot_bgcolor='white',
+            legend=dict(
+                orientation="h",
+                xanchor="right",
+                yanchor="bottom",
+                x=1,
+                y=1.04
+            ),
+        )
+        fig.update_xaxes(
+            tickformat="%Y/%m/%d",
+            showticklabels=True,
+            showgrid=True,
+            gridcolor='lightgrey',
+        )
+        fig.update_yaxes(
+            showgrid=True,
+            gridcolor='lightgrey',
+        )
+        return _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"multiples.html"))
+
+    @property
+    def df(self) -> pd.DataFrame:
+        if not hasattr(self, '__df'):
+            per_bnd, pbr_bnd = get_multiple_band(self._p.ticker)
+            df = pd.concat(
+                objs=dict(
+                    multiple=get_multiple_series(self._p.ticker),
+                    per_band=per_bnd,
+                    pbr_band=pbr_bnd
+                ),
+                axis=1
+            )
+            self.__setattr__('__df', df)
+        return self.__getattribute__('__df')
+
+    def _line(self, c1:str, c2:str):
+        df = self.df[c1][c2].dropna()
+        cd = c2.endswith('가') or c2 == 'EPS' or c2 == 'BPS'
+        return go.Scatter(
+            name=c2,
+            x=df.index,
+            y=df,
+            showlegend=False if c2.endswith('가') or ('X' in c2) else True,
+            mode='lines',
+            line=dict(
+                color='black' if c2.endswith('가') else None,
+                dash='dot' if c2.endswith('가') else None
+            ),
+            xhoverformat='%Y/%m/%d',
+            yhoverformat=',d' if cd else '.2f',
+            hovertemplate=c2 + '<br>%{x}<br>%{y}' + f'{"원" if cd else ""}<extra></extra>'
+        )
+
+    def _line_bands(self, col:str):
+        return [self._line(col, c) for c in self.df[col].columns]
+
+
+class _benchmark(object):
+    def __init__(self, parent:label or None):
+        self._p = parent
+        return
+
+    def __call__(self, mode:str = 'show'):
+        fig = go.Figure(
+            data=[self._line(c1, c2) for c1, c2 in self.df.columns],
+            layout=go.Layout(
+
+            )
+        )
+        return
+
+    @property
+    def df(self) -> pd.DataFrame:
+        if not hasattr(self, '__df'):
+            self.__setattr__('__df', get_benchmark_return(self._p.ticker))
+        return self.__getattribute__('__df')
+
+    def _line(self, c1:str, c2:str):
+        ky = self.df[c1].columns[0]
+        df = self.df[c1][c2].dropna()
+        return go.Scatter(
+            name=c1,
+            x=df.index,
+            y=df,
+            showlegend=True if c2 == ky else False,
+            visible=True if c1 == '3M' else False,
+            mode='lines',
+            line=dict(
+                color='black' if c2 == ky else None,
+                dash='dot' if c2 == ky else None
+            ),
+            xhoverformat='%Y/%m/%d',
+            yhoverformat='.2f',
+            hovertemplate=c2 + ': %{y}%<extra></extra>'
+        )
