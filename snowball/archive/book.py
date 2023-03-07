@@ -131,7 +131,7 @@ class _symbols(object):
             return 'krse'
         elif symbol in self.ecos.symbol.values:
             return 'ecos'
-        elif symbol in self.us.symbol.values:
+        elif symbol in self.us.index:
             return 'nyse'
         else:
             pass

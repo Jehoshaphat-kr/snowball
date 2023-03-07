@@ -1,4 +1,4 @@
-from snowball.timeseries.handle import _handle
+from snowball.timeseries._interface import _handle
 import plotly.graph_objects as go
 import pandas as pd
 

@@ -14,7 +14,11 @@ from snowball.fundamental._fetch import (
     get_foreign_rate,
     get_multiple_series,
     get_multiple_band,
-    get_benchmark_return
+    get_benchmark_return,
+    get_multi_factor,
+    get_benchmark_multiple,
+    get_short_sell,
+    get_short_balance
 )
 import plotly.graph_objects as go
 import pandas as pd
@@ -114,8 +118,10 @@ class _statement(object):
             y=self.df[col],
             showlegend=True,
             visible=True,
-            marker=dict(color='green' if '자본' in col else 'red'),
-            opacity=0.9,
+            marker=dict(
+                color='green' if '자본' in col else 'red'
+            ),
+            opacity=0.8,
             meta=round(100 * self.df[col] / self.df.자산총계, 2),
             text=self.df[col].apply(int2won),
             texttemplate="%{text}<br>(%{meta}%)",
@@ -564,7 +570,7 @@ class _foreigner(object):
                 orientation="h",
                 xanchor="right",
                 yanchor="bottom",
-                x=1,
+                x=0.96,
                 y=1
             ),
             hovermode="x unified",
@@ -700,11 +706,12 @@ class _multiple(object):
     def _line(self, c1:str, c2:str):
         df = self.df[c1][c2].dropna()
         cd = c2.endswith('가') or c2 == 'EPS' or c2 == 'BPS'
+        nm = '종가' if c2.endswith('가') else c2
         if c2.endswith('가'):
             p = self._p.ohlcv.종가
             df = p[p.index > df.index[0]]
         return go.Scatter(
-            name='종가' if c2.endswith('가') else c2,
+            name=nm,
             x=df.index,
             y=df,
             showlegend=False if c2.endswith('가') or ('X' in c2) else True,
@@ -715,7 +722,7 @@ class _multiple(object):
             ),
             xhoverformat='%Y/%m/%d',
             yhoverformat=',d' if cd else '.2f',
-            hovertemplate=c2 + '<br>%{x}<br>%{y}' + f'{"원" if cd else ""}<extra></extra>'
+            hovertemplate=nm + '<br>%{x}<br>%{y}' + f'{"원" if cd else ""}<extra></extra>'
         )
 
     def _line_bands(self, col:str):
@@ -805,4 +812,153 @@ class _benchmark(object):
             xhoverformat='%Y/%m/%d',
             yhoverformat='.2f',
             hovertemplate='%{y}%<extra></extra>'
+        )
+
+
+class _factors(object):
+    def __init__(self, parent:label or None):
+        self._p = parent
+        return
+
+    def __call__(self, mode:str='show'):
+        fig = make_subplots(
+            rows=2, cols=2,
+            subplot_titles=[None, 'PER', 'EV/EBITDA', 'ROE'],
+            x_title='기말',
+            horizontal_spacing=0.08, vertical_spacing=0.1,
+            specs=[
+                [{'type':'polar'}, {'type':'bar'}],
+                [{'type':'bar'}, {'type':'bar'}]
+            ],
+        )
+        fig.add_traces(
+            data=[self._polar(c) for c in self.df[0].columns] + [self._bar(c1, c2) for c1, c2 in self.df[1].columns],
+            rows=[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
+            cols=[1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2]
+        )
+        fig.update_layout(
+            title=f"<b>{self._p.name}({self._p.ticker})</b> Factors",
+            plot_bgcolor='white',
+            legend=dict(
+                orientation="h",
+                xanchor="right",
+                yanchor="bottom",
+                x=0.98,
+                y=1.02
+            ),
+        )
+        fig.update_yaxes(
+            showgrid=True,
+            gridcolor='lightgrey',
+        )
+        return _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"benchmark.html"))
+
+    @property
+    def df(self):
+        if not hasattr(self, '__df'):
+            dff, dfm = get_multi_factor(self._p.ticker), get_benchmark_multiple(self._p.ticker)
+            self.__setattr__('__df', (dff, dfm))
+        return self.__getattribute__('__df')
+
+    def _polar(self, col:str) -> go.Scatterpolar or None:
+        df, _ = self.df
+        return go.Scatterpolar(
+            name=col,
+            r=df[col].astype(float),
+            theta=df.index,
+            fill='toself',
+            showlegend=True,
+            visible=True,
+            hovertemplate=col + '<br>%{theta} : %{r}<extra></extra>'
+        )
+
+    def _bar(self, c1:str, c2:str) -> go.Bar or None:
+        _, df = self.df
+        n = df.columns.tolist().index((c1, c2)) % 3
+        return go.Bar(
+            name=c2,
+            x=df.index,
+            y=df[c1][c2],
+            showlegend=True if c1 == 'PER' else False,
+            legendgroup=c2,
+            visible=True,
+            marker=dict(color=colors[n]),
+            opacity=0.9,
+            text=df[c1][c2],
+            textposition='inside',
+            texttemplate='%{text}' + '%' if c1 == 'ROE' else '',
+            hovertemplate=f'{c2}<br>{c1}' + ': %{y}' + f'{"%" if c1 == "ROE" else ""}<extra></extra>'
+        )
+
+
+class _short(object):
+    def __init__(self, parent:label or None):
+        self._p = parent
+        return
+
+    def __call__(self, mode:str='show'):
+        fig = make_subplots(
+            rows=1, cols=1,
+            specs=[[{'secondary_y': True}]]
+        )
+        fig.add_traces(
+            data=[self._line(c) for c in self.df.columns],
+            rows=[1,1,1], cols=[1,1,1],
+            secondary_ys=[True, True, False]
+        )
+        fig.update_layout(
+            title=f"<b>{self._p.name}({self._p.ticker})</b> Short",
+            plot_bgcolor='white',
+            legend=dict(
+                orientation="h",
+                xanchor="right",
+                yanchor="bottom",
+                x=1,
+                y=1
+            ),
+            hovermode="x unified",
+            xaxis=dict(
+                title='날짜',
+                tickformat="%Y/%m/%d",
+                showticklabels=True,
+                showgrid=True,
+                gridcolor='lightgrey',
+            ),
+            yaxis=dict(
+                title='[KRW]',
+                showgrid=True,
+                gridcolor='lightgrey'
+            ),
+            yaxis2=dict(
+                title='[%]',
+            ),
+        )
+        return _call(fig=fig, mode=mode, filedir=os.path.join(getattr(self._p, 'path'), f"short.html"))
+
+    @property
+    def df(self) -> pd.DataFrame:
+        if not hasattr(self, '__df'):
+            short = get_short_sell(self._p.ticker)
+            balance = get_short_balance(self._p.ticker)
+            ohlcv = self._p.ohlcv[self._p.ohlcv.index >= short.index[0]].copy()
+            df = ohlcv.join(short.차입공매도비중, how='left').join(balance.대차잔고비중, how='left')
+            self.__setattr__('__df', df[['차입공매도비중', '대차잔고비중', '종가']])
+        return self.__getattribute__('__df')
+
+    def _line(self, col:str):
+        df = self.df[col].dropna().copy()
+        return go.Scatter(
+            name=col,
+            x=df.index,
+            y=df,
+            showlegend=True,
+            visible='legendonly' if '차입공매도' in col else True,
+            mode='lines',
+            line=dict(
+                color='black' if col == '종가' else 'red' if '대차' in col else 'royalblue',
+                dash='dot' if col == '종가' else None
+            ),
+            xhoverformat='%Y/%m/%d',
+            yhoverformat=',d' if col == '종가' else '.2f',
+            hovertemplate='%{y}' + ('원' if col == '종가' else '%') + '<extra></extra>'
         )

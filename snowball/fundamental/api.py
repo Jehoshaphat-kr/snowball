@@ -8,7 +8,9 @@ from snowball.fundamental._view import (
     _consensus,
     _foreigner,
     _multiple,
-    _benchmark
+    _benchmark,
+    _factors,
+    _short
 )
 import os
 
@@ -101,6 +103,24 @@ class KrseStock(TimeSeries):
           - __call__: default benchmark series
         '''
         self.benchmark = _benchmark(self)
+
+        '''
+        Factors
+        1) Attributes
+          - df: source dataframe (tuple)
+        2) Method
+          - __call__: default factor subplots
+        '''
+        self.factors = _factors(self)
+
+        '''
+        Short
+        1) Attributes
+          - df: source dataframe
+        2) Method
+          - __call__: default short plot
+        '''
+        self.short = _short(self)
         return
 
     @property
@@ -113,34 +133,15 @@ class KrseStock(TimeSeries):
             os.makedirs(path)
         self.__p = path
 
-# class _trace(fnguide):
-#     @property
-#     def MULTIFACTOR(self) -> go.Figure:
-#         traces = [
-#             go.Scatterpolar(
-#                 name=col,
-#                 r=self.multi_factor[col].astype(float),
-#                 theta=self.multi_factor.index,
-#                 fill='toself',
-#                 showlegend=True,
-#                 visible=True,
-#                 hovertemplate=col + '<br>팩터: %{theta}<br>값: %{r}<extra></extra>'
-#             ) for n, col in enumerate(self.multi_factor.columns)
-#         ]
-#         layout = dict(
-#             title=f"<b>{self.name}({self.ticker})</b> Multi-Factors",
-#             plot_bgcolor='white',
-#         )
-#         return go.Figure(data=traces, layout=layout)
-
 
 if __name__ == "__main__":
 
     # tester.SUPPLY.show()
     # tester.MULTIFACTOR.show()
 
-    t = '316140'
-    # t = '017670'
+    # t = '316140' # Woori
+    # t = '017670' # SK Telecom
+    t = '000720'
     stock = KrseStock(ticker=t)
     # stock.path = rf'\\kefico\keti\ENT\Softroom\Temp\J.H.Lee\snob\{stock.ticker} {stock.name}'
 
@@ -153,11 +154,13 @@ if __name__ == "__main__":
     # stock.products('save')
     # stock.products.yearly('show')
     # stock.products.recent('show')
-    # stock.expenses('show')
-    # stock.consensus('show')
-    # stock.foreigner('show')
-    stock.multiples('show')
-    stock.benchmark('show')
+    # stock.expenses('save')
+    # stock.consensus('save')
+    # stock.foreigner('save')
+    # stock.multiples('save')
+    # stock.benchmark('save')
+    # stock.factors('show')
+    stock.short('show')
 
+    # print(stock.short.df)
 
-    # print(stock.multiples.df)

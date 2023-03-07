@@ -173,7 +173,7 @@ def get_benchmark_multiple(ticker:str) -> pd.DataFrame:
         for col in inner1.columns:
             inner1[col] = inner1[col].apply(lambda x: np.nan if x == '-' else x)
         objs[label] = inner1.T
-    return pd.concat(objs=objs, axis=1)
+    return pd.concat(objs=objs, axis=1).astype(float)
 
 def get_short_sell(ticker:str) -> pd.DataFrame:
     url = f"http://cdn.fnguide.com/SVO2/json/chart/11_01/chart_A{ticker}_SELL1Y.json"
@@ -219,4 +219,5 @@ def get_multiple_series(ticker:str) -> pd.DataFrame:
 
 if __name__ == "__main__":
     # df1, df2 = get_multiple_band(ticker='005930')
-    print(get_benchmark_return('005930'))
+    # print(get_benchmark_return('005930'))
+    print(get_benchmark_multiple('012330'))

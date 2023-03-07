@@ -77,18 +77,16 @@ def fred(symbol: str, prev:datetime, curr:datetime) -> pd.Series:
 class _fetch(label):
     __p = 20
     __d = datetime.now(timezone('Asia/Seoul')).date()
-    __t = None
 
     @property
     def dtype(self) -> str:
-        if not self.__t:
-            if self.market == 'krse': self.__t = ',d'
-            else: self.__t = ',.2f'
-        return self.__t
+        if not hasattr(self, '__dtype'):
+            self.__setattr__('__dtype', ',d' if self.market else ',.2f')
+        return self.__getattribute__('__dtype')
 
     @dtype.setter
     def dtype(self, dtype:str):
-        self.__t = dtype
+        self.__setattr__('__dtype', dtype)
 
     @property
     def enddate(self) -> str:
@@ -107,16 +105,22 @@ class _fetch(label):
         self.__p = period
 
     @property
-    def src(self) -> pd.DataFrame:
-        return self._fetch()
-
-    @property
     def ohlcv(self) -> pd.DataFrame:
-        if isinstance(self.src, pd.Series):
-            return pd.DataFrame(columns=['시가', '고가', '저가', '종가', '거래량'])
-        return self.src
+        if not self.isohlcv():
+            df = pd.DataFrame(columns=['시가', '고가', '저가', '종가', '거래량'])
+            df['종가'] = self._fetch()
+            return df
+        return self._fetch()
+    
+    @property
+    def close(self) -> pd.Series:
+        return self.ohlcv.종가
 
-    def _fetch(self) -> pd.DataFrame:
+    def isohlcv(self) -> bool:
+        df = self._fetch()
+        return not (isinstance(df, pd.Series) and not isinstance(df, pd.DataFrame))
+
+    def _fetch(self) -> pd.DataFrame or pd.Series:
         curr = self.__d
         prev = curr - timedelta(self.period * 365)
 
