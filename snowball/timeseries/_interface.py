@@ -147,6 +147,10 @@ class _handle(_fetch):
         return self.ohlcv[self.ohlcv.index >= (self.ohlcv.index[-1] - timedelta(365))].min()['종가']
 
     @property
+    def ma(self) -> pd.DataFrame:
+        return pd.concat(objs={f'{w}D': self.close.rolling(w).mean() for w in [5, 10, 20, 60, 120, 200]}, axis=1)
+
+    @property
     def relreturn(self) -> pd.DataFrame:
         """
         Relative return in given period (3M / 6M / 1Y / 2Y / 3Y / 5Y), start normalized with 0%
@@ -192,6 +196,10 @@ class _handle(_fetch):
         for gap, days in [('1M', 30), ('2M', 61), ('3M', 92), ('6M', 183), ('1Y', 365)]:
             fitted = fit(series=self.typical[self.typical.index >= (self.typical.index[-1] - timedelta(days))])
             objs.append(fitted.rename(columns={'Regression': gap}))
+        size = len(self.typical)
+        objs.append(fit(series=self.typical).rename(columns={'Regression': 'ALL'}))
+        objs.append(fit(series=self.typical.iloc[size / 2:]).rename(columns={'Regression': 'Half'}))
+        objs.append(fit(series=self.typical.iloc[size / 4:]).rename(columns={'Regression': 'Quarter'}))
         self.__setattr__('__tl', pd.concat(objs=objs, axis=1))
         return self.__getattribute__('__tl')
 
@@ -242,11 +250,11 @@ if __name__ == "__main__":
     """
     pd.set_option('display.expand_frame_repr', False)
 
-    test = _handle(ticker='293490')
+    test = _handle(ticker='247540')
     # print(test.ohlcv)
     # print(test.typical)
     # print(test.max52w)
     # print(test.relreturn)
     # print(test.trendline)
     # print(test.trendstrength)
-    print(test.boundline)
+    # print(test.boundline)

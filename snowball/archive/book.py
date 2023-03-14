@@ -5,7 +5,7 @@ from pykrx.stock import (
 from stocksymbol import StockSymbol
 from snowball.define import xml2df
 import pandas as pd
-import os
+import os, requests
 
 
 class _symbols(object):
@@ -25,12 +25,6 @@ class _symbols(object):
         2641  950220  NeoImmuneTech(Reg.S)         NeoImmuneTech, Inc.       KQ  kr_market    EQUITY       NaN          NaN
         """
         if not hasattr(self, '__kr'):
-            kr = pd.DataFrame(self._engine_s.get_symbol_list(market='kr'))
-            split = kr.symbol.str.split('.').str
-            kr['symbol'] = split[0]
-            kr['exchange'] = split[1]
-            kr.set_index(keys='symbol', inplace=True)
-
             local = pd.concat(
                 objs=[
                     pd.read_csv(os.path.join(self._dir, r'krse/wi26.csv'), dtype=str),
@@ -38,13 +32,24 @@ class _symbols(object):
                 ], axis=0
             )
             local.set_index(keys='종목코드', inplace=True)
-            missing = local[
-                local.index.isin(list(set(local.index) - set(kr.index)))
-            ][['종목명', '섹터']].rename(columns={'종목명':'longName', '섹터':'sector'})
 
-            kr = kr.join(local[['종목명', '섹터']].rename(columns={'종목명':'name', '섹터':'sector'}), how='left')
-            kr = pd.concat(objs=[kr, missing], axis=0)
-            kr.index.name = 'symbol'
+            # noinspection PyBroadException
+            try:
+                kr = pd.DataFrame(self._engine_s.get_symbol_list(market='kr'))
+                split = kr.symbol.str.split('.').str
+                kr['symbol'] = split[0]
+                kr['exchange'] = split[1]
+                kr.set_index(keys='symbol', inplace=True)
+                missing = local[
+                    local.index.isin(list(set(local.index) - set(kr.index)))
+                ][['종목명', '섹터']].rename(columns={'종목명': 'longName', '섹터': 'sector'})
+
+                kr = kr.join(local[['종목명', '섹터']].rename(columns={'종목명': 'name', '섹터': 'sector'}), how='left')
+                kr = pd.concat(objs=[kr, missing], axis=0)
+                kr.index.name = 'symbol'
+            except:
+                kr = local.copy()
+                kr = kr.rename(columns={'종목명': 'longName', '섹터':'sector'})
             self.__setattr__('__kr', kr)
         return self.__getattribute__('__kr')
 

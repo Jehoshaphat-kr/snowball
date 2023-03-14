@@ -1,1 +1,1 @@
-from snowball.timeseries.wrap import _trace as TimeSeries
+from snowball.timeseries.api import TimeSeries

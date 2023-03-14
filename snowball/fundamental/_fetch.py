@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 from urllib.request import urlopen
 from bs4 import BeautifulSoup as Soup
 from pykrx import stock
-from snowball.define import int2won
 import requests, json
 import pandas as pd
 import numpy as np
@@ -40,11 +39,12 @@ def get_statement(ticker:str, **kwargs) -> pd.DataFrame:
         s.drop(index=s.index[0], inplace=True)
     return s.T.astype(float)
 
-def get_market_cap(ticker:str, todate:str) -> pd.Series:
+def get_market_cap(ticker:str, todate:str) -> pd.DataFrame:
     fromdate = (datetime.strptime(todate, "%Y%m%d") - timedelta(365 * 5)).strftime("%Y%m%d")
     df = stock.get_market_cap_by_date(fromdate=fromdate, todate=todate, freq='y', ticker=ticker)
+    if df.empty:
+        return pd.DataFrame(columns=['시가총액'])
     df['시가총액'] = round(df['시가총액'] / 100000000, 1).astype(int)
-    # df['시가총액LB'] = df.시가총액.apply(int2won)
     df.index = df.index.strftime("%Y/%m")
     df['reindex'] = df.index[:-1].tolist() + [f"{df.index[-1][:4]}/현재"]
     df = df.set_index(keys='reindex')
@@ -156,7 +156,10 @@ def get_benchmark_return(ticker:str):
             ].set_index(keys='TRD_DT').rename(columns=header.set_index(keys='ID').to_dict()['PREF_NAME'])
         inner.index = pd.to_datetime(inner.index)
         objs[period] = inner
-    return pd.concat(objs=objs, axis=1).astype(float)
+    df = pd.concat(objs=objs, axis=1).copy()
+    for c in df.columns:
+        df[c] = df[c].str.replace(',', '').astype(float)
+    return df
 
 def get_benchmark_multiple(ticker:str) -> pd.DataFrame:
     url = f"http://cdn.fnguide.com/SVO2/json/chart/01_04/chart_A{ticker}_D.json"
@@ -219,5 +222,5 @@ def get_multiple_series(ticker:str) -> pd.DataFrame:
 
 if __name__ == "__main__":
     # df1, df2 = get_multiple_band(ticker='005930')
-    # print(get_benchmark_return('005930'))
-    print(get_benchmark_multiple('012330'))
+    print(get_benchmark_return('247540'))
+    # print(get_benchmark_multiple('012330'))
